@@ -57,12 +57,16 @@ if nargin < 6
   process = true;
 end
 
-%% Project data
 dataDims = numDims(data);
+if ~isempty(data) && ~(dataDims == g.dim || dataDims == g.dim+1)
+  error('Inconsistent input data dimensions!')
+end
+
+%% Project data
 if dataDims == g.dim
   [gOut, dataOut] = projSingle(g, data, dims, xs, NOut, process);
   
-elseif dataDims == g.dim + 1
+else % dataDims == g.dim + 1
   % Project grid
   gOut = projSingle(g, [], dims, xs, NOut, process);
   
@@ -75,10 +79,6 @@ elseif dataDims == g.dim + 1
   for i = 1:numTimeSteps
     [~, dataOut(colonsOut{:},i)] = ...
       projSingle(g, data(colonsIn{:},i), dims, xs, NOut, process);
-  end
-else
-  if ~isempty(data)
-    error('Inconsistent input data dimensions!')
   end
 end
 
