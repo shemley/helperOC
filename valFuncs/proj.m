@@ -77,8 +77,11 @@ elseif dataDims == g.dim + 1
       projSingle(g, data(colonsIn{:},i), dims, xs, NOut, process);
   end
 else
-  error('Inconsistent input data dimensions!')
+  if ~isempty(data)
+    error('Inconsistent input data dimensions!')
+  end
 end
+
 end
 function [gOut, dataOut] = projSingle(g, data, dims, xs, NOut, process)
 % [gOut, dataOut] = proj(g, data, dims, xs, NOut)
