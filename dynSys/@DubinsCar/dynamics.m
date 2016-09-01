@@ -1,4 +1,4 @@
-function dx = dynamics(obj, t, x, u, ~, ~)
+function dx = dynamics(obj, ~, x, u, ~, ~)
 % Dynamics of the Dubins Car
 %    \dot{x}_1 = v * cos(x_3)
 %    \dot{x}_2 = v * sin(x_3)

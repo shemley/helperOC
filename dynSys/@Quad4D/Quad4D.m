@@ -1,23 +1,7 @@
-classdef Quadrotor < Vehicle
-  % Note: Since quadrotor is a "handle class", we can pass on
-  % handles/pointers to other quadrotor objects
-  % e.g. a.platoon.leader = b (passes b by reference, does not create a copy)
-  % Also see constructor
-  
+classdef Quad4D < DynSys
   properties
-    uMin = -3    % Control bounds
-    uMax = 3
-    
-    vMax = 5       % Speed bounds
-    vMin = -5
-    
-    % Waypoints to follow; 
-    % Warning 1: For now this only comes up in getToPose, but eventually,
-    % it may be a good idea to always use this.
-    % Warning 2: Right now it's always a linear function; however, ideally
-    % it should just be a few points
-    waypoints = [] 
-    
+    uMin    % Control bounds
+    uMax
   end % end properties
   
   properties(Constant)
@@ -35,8 +19,8 @@ classdef Quadrotor < Vehicle
   end % end properties(Constant)
   
   methods
-    function obj = Quadrotor(x)
-      % obj = quadrotor(x)
+    function obj = Quad4D(x, uMin, uMax)
+      % obj = Quad4D(x, uMax)
       %
       % Constructor. Creates a quadrotor object with a unique ID,
       % state x, and reachable set information reachInfo
@@ -50,10 +34,11 @@ classdef Quadrotor < Vehicle
       %
       % Inputs:   x   - state: [xpos; xvel; ypos; yvel]
       % Output:   obj - a quadrotor object
-      %
-      % Mo Chen, Qie Hu, 2015-05-22
-      % Modified by Mo Chen, 2015-07-06
-      % Modified by Mo Chen, 2015-11-03
+      
+      if nargin < 2
+        uMax = 3;
+        uMin = -3;
+      end
       
       % Make sure initial state is 4D
       if numel(x) ~= 4
@@ -68,9 +53,9 @@ classdef Quadrotor < Vehicle
       obj.x = x;
       obj.xhist = x;
       
+      obj.uMax = uMax;
+      obj.uMin = uMin;
+      
     end % end constructor
-    function valid = isvalidcontrol(obj,u) 
-        valid = and([obj.uMin; obj.uMin] <= u,u <= [obj.uMax; obj.uMax]);
-    end
   end % end methods
 end % end class
