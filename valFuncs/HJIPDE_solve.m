@@ -1,5 +1,5 @@
 function [data, tau, extraOuts] = ...
-  HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
+  HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs,quiet)
 % [data, tau, extraOuts] = ...
 %   HJIPDE_solve(data0, tau, schemeData, minWith, extraargs)
 %     Solves HJIPDE with initial conditions data0, at times tau, and with
@@ -75,6 +75,10 @@ end
 
 if nargin < 5
   extraArgs = [];
+end
+
+if nargin < 6
+  quiet = 0;
 end
 
 extraOuts = [];
@@ -239,7 +243,9 @@ else
 end
 
 for i = istart:length(tau)
-  fprintf('tau(i) = %f\n', tau(i))
+  if quiet == 0
+    fprintf('tau(i) = %f\n', tau(i))
+  end
   %% Variable schemeData
   if isfield(extraArgs, 'SDModFunc')
     if isfield(extraArgs, 'SDModParams')
@@ -263,7 +269,10 @@ for i = istart:length(tau)
       yLast = y;
     end
     
+    if quiet == 0 
     fprintf('  Computing [%f %f]...\n', tNow, tau(i))
+    end
+    
     [tNow, y] = feval(integratorFunc, schemeFunc, [tNow tau(i)], y, ...
       integratorOptions, schemeData);
     
@@ -297,7 +306,9 @@ for i = istart:length(tau)
   
   if stopConverge
     change = max(abs(y - y0(:)));
+    if quiet == 0
     fprintf('Max change since last iteration: %f\n', change)
+    end
   end
   
   % Reshape value function
@@ -413,7 +424,10 @@ for i = istart:length(tau)
 end
 
 endTime = cputime;
+if quiet == 0;
+else
 fprintf('Total execution time %g seconds\n', endTime - startTime);
+end
 end
 
 function [dissFunc, integratorFunc, derivFunc] = ...
