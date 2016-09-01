@@ -5,17 +5,9 @@ classdef Quad4D < DynSys
   end % end properties
   
   properties(Constant)
-    % Dimensions of state and control
-    nx = 4;
-    nu = 2;
-    
     % A and B matrices
     A = [0 1 0 0; 0 0 0 0; 0 0 0 1; 0 0 0 0];
     B = [0 0; 1 0; 0 0; 0 1];
-    
-    % Indices of position and velocity variables
-    pdim = [1 3];
-    vdim = [2 4];
   end % end properties(Constant)
   
   methods
@@ -55,6 +47,9 @@ classdef Quad4D < DynSys
       
       obj.uMax = uMax;
       obj.uMin = uMin;
+      
+      obj.pdim = [1 3];
+      obj.vdim = [2 4];
       
     end % end constructor
   end % end methods
