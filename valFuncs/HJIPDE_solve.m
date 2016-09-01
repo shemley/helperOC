@@ -425,7 +425,6 @@ end
 
 endTime = cputime;
 if quiet == 0;
-else
 fprintf('Total execution time %g seconds\n', endTime - startTime);
 end
 end
