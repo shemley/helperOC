@@ -1,4 +1,4 @@
-function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
+function vf = reconSC(vfs, range_lower, range_upper, minOverTime)
 % vf = reconSC(vfs_SC, range_lower, range_upper)
 %
 % Inputs:
@@ -25,8 +25,6 @@ function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
 %             .g
 %             .data
 %             .tau
-%
-% Mo Chen, 2016-05-15
 
 %% Input checking
 % Grids and corresponding value functions

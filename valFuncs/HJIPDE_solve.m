@@ -350,7 +350,7 @@ for i = istart:length(tau)
       error('Mismatch between plot and grid dimensions!');
     end
     
-    if (pDims >= 4 || gDim > 4)
+    if (pDims > 4 || gDim > 4)
       error('Currently plotting up to 3D is supported!');
     end
     
@@ -359,7 +359,13 @@ for i = istart:length(tau)
     
     if deleteLastPlot 
       if isfield(extraOuts, 'hT')
-        delete(extraOuts.hT);
+        if iscell(extraOuts.hT)
+          for hi = 1:length(extraOuts.hT)
+            delete(extraOuts.hT{hi})
+          end
+        else
+          delete(extraOuts.hT);
+        end
       end
       
       if isfield(extraOuts, 'hO') && strcmp(obsMode, 'time-varying')
@@ -382,7 +388,7 @@ for i = istart:length(tau)
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, [], false);
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, gPlot.dim, false);
     
     if strcmp(obsMode, 'time-varying')
       extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
