@@ -135,12 +135,7 @@ for i = 1:num_vfs
   end
 end
 
-%% If we're just interested in min over time, min over all vf.data
-if minOverTime
-  vf.data = min(vf.data, [], vf.g.dim+1);
-end
-
-% Get rid of singleton dimensions
+%% Get rid of singleton dimensions
 vf.data = squeeze(vf.data);
 vf.g.dim = nnz(vf.g.N > 1.5);
 vf.g.min = vf.g.min(vf.g.N > 1.5);
@@ -154,5 +149,10 @@ vf.g.shape = vf.g.shape(vf.g.N > 1.5);
 vf.g.N = vf.g.N(vf.g.N > 1.5);
 for i = 1:vf.g.dim
   vf.g.xs{i} = squeeze(vf.g.xs{i});
+end
+
+%% If we're just interested in min over time, min over all vf.data
+if minOverTime
+  vf.dataMin = min(vf.data, [], vf.g.dim+1);
 end
 end
