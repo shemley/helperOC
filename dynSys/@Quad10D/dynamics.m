@@ -50,7 +50,7 @@ switch dim
   case 9
     dx = x{dims==10};
   case 10
-    dx = obj.kT * u{3};
+    dx = obj.kT * u{3} - obj.g;
     
   otherwise
     error('Only dimension 1-10 are defined for dynamics of Quad10D!')

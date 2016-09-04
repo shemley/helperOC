@@ -25,12 +25,17 @@ gNew.N = zeros(gNew.dim, 1);
 gNew.min = zeros(gNew.dim, 1);
 gNew.max = zeros(gNew.dim, 1);
 gNew.bdry = gOld.bdry;
+small = 1e-3;
 
 for i = 1:gNew.dim
   gNew.vs{i} = gOld.vs{i}(gOld.vs{i} > xmin(i) & gOld.vs{i} < xmax(i));
   gNew.N(i) = length(gNew.vs{i});
   gNew.min(i) = min(gNew.vs{i});
+  if gNew.N(i) == 1
+    gNew.max(i) = max(gNew.vs{i}) + small;
+  else
   gNew.max(i) = max(gNew.vs{i});
+  end
   if gNew.N(i) < gOld.N(i)
     gNew.bdry{i} = @addGhostExtrapolate;
   end
