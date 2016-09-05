@@ -2,7 +2,6 @@ function hamValue = genericHam(t, data, deriv, schemeData)
 % function hamValue = genericHam(t, data, deriv, schemeData)
 
 %% Input unpacking
-g = schemeData.grid;
 dynSys = schemeData.dynSys;
 
 if ~isfield(schemeData, 'uMode')
@@ -25,33 +24,33 @@ end
 %% Copy state matrices in case we're doing MIE
 % Dimension information (in case we're doing MIE)
 % TIdim = [];
-dims = 1:dynSys.nx;
-if isfield(schemeData, 'MIEdims')
-  %   TIdim = schemeData.TIdim;
-  dims = schemeData.MIEdims;
-end
-%
+% dims = 1:dynSys.nx;
+% if isfield(schemeData, 'MIEdims')
+%   %   TIdim = schemeData.TIdim;
+%   dims = schemeData.MIEdims;
+% end
+% %
 % TIderiv = -1; % Coefficient correction (for MIE only)
 % dc = 0; % Dissipation compensation (for MIE only)
 
-x = cell(dynSys.nx, 1);
-x(dims) = g.xs;
+% x = cell(dynSys.nx, 1);
+% x(dims) = g.xs;
 
 %% Optimal control and disturbance
 if isfield(schemeData, 'uIn')
   u = schemeData.uIn;
 else
-  u = dynSys.optCtrl(t, x, deriv, schemeData.uMode);
+  u = dynSys.optCtrl(t, schemeData.grid.xs, deriv, schemeData.uMode);
 end
 
 if isfield(schemeData, 'dIn')
   d = schemeData.dIn;
 else
-  d = dynSys.optDstb(t, x, deriv, schemeData.dMode);
+  d = dynSys.optDstb(t, schemeData.grid.xs, deriv, schemeData.dMode);
 end
 
 %% Plug optimal control into dynamics to compute Hamiltonian
-dx = dynSys.dynamics(t, x, u, d);
+dx = dynSys.dynamics(t, schemeData.grid.xs, u, d);
 
 hamValue = 0;
 if isfield(schemeData, 'side')

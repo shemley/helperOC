@@ -1,4 +1,4 @@
-function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
+function vf = reconSC(vfs, range_lower, range_upper, minOverTime)
 % vf = reconSC(vfs_SC, range_lower, range_upper)
 %
 % Inputs:
@@ -25,8 +25,6 @@ function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
 %             .g
 %             .data
 %             .tau
-%
-% Mo Chen, 2016-05-15
 
 %% Input checking
 % Grids and corresponding value functions
@@ -64,7 +62,7 @@ end
 
 % Subsystem grid dimensions
 for i = 1:num_vfs
-  if vfs.gs{i}.dim ~= length(vfs.dims)
+  if vfs.gs{i}.dim ~= length(vfs.dims{i})
     error('Grid dimensions are inconsistent!')
   end
 end
@@ -137,8 +135,24 @@ for i = 1:num_vfs
   end
 end
 
+%% Get rid of singleton dimensions
+vf.data = squeeze(vf.data);
+vf.g.dim = nnz(vf.g.N > 1.5);
+vf.g.min = vf.g.min(vf.g.N > 1.5);
+vf.g.max = vf.g.max(vf.g.N > 1.5);
+vf.g.dx = vf.g.dx(vf.g.N > 1.5);
+vf.g.bdry = vf.g.bdry(vf.g.N > 1.5);
+vf.g.bdryData = vf.g.bdryData(vf.g.N > 1.5);
+vf.g.vs = vf.g.vs(vf.g.N > 1.5);
+vf.g.xs = vf.g.xs(vf.g.N > 1.5);
+vf.g.shape = vf.g.shape(vf.g.N > 1.5);
+vf.g.N = vf.g.N(vf.g.N > 1.5);
+for i = 1:vf.g.dim
+  vf.g.xs{i} = squeeze(vf.g.xs{i});
+end
+
 %% If we're just interested in min over time, min over all vf.data
 if minOverTime
-  vf.data = min(vf.data,[],vf.g.dim+1);
+  vf.dataMin = min(vf.data, [], vf.g.dim+1);
 end
 end
