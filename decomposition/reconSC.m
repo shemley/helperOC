@@ -119,19 +119,37 @@ vf.g = createGrid(grid_min, grid_max, N);
 %% Time stamps
 vf.tau = vfs.tau;
 
-%% Expand look-up tables to fill in missing dimensions
-vf.data = -inf([vf.g.N' length(vf.tau)]); 
-colons = repmat({':'}, 1, vf.g.dim);
-
-for i = 1:num_vfs
-  colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
-
-  for t = 1:length(vf.tau)
-    [~, data_trunc] = ...
-      truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
+if minOverTime
+  %% Expand look-up tables to fill in missing dimensions
+  vf.data = -inf(vf.g.N');
+  colons = repmat({':'}, 1, vf.g.dim);
+  
+  for i = 1:num_vfs
+    colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
     
-    vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
-      fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+    for t = 1:length(vf.tau)
+      [~, data_trunc] = ...
+        truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
+      
+      vf.data(colons{:}) = max(vf.data(colons{:}), ...
+        fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+    end
+  end
+else
+  %% Expand look-up tables to fill in missing dimensions
+  vf.data = -inf([vf.g.N' length(vf.tau)]);
+  colons = repmat({':'}, 1, vf.g.dim);
+  
+  for i = 1:num_vfs
+    colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
+    
+    for t = 1:length(vf.tau)
+      [~, data_trunc] = ...
+        truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
+      
+      vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
+        fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+    end
   end
 end
 
@@ -152,7 +170,7 @@ for i = 1:vf.g.dim
 end
 
 %% If we're just interested in min over time, min over all vf.data
-if minOverTime
-  vf.dataMin = min(vf.data, [], vf.g.dim+1);
-end
+% if minOverTime
+%   vf.dataMin = min(vf.data, [], vf.g.dim+1);
+% end
 end
