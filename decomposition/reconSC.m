@@ -128,11 +128,15 @@ if minOverTime
     colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
     
     for t = 1:length(vf.tau)
+      vf.dataLast = vf.data;
       [~, data_trunc] = ...
         truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
       
       vf.data(colons{:}) = max(vf.data(colons{:}), ...
         fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+      if t>1
+        vf.data(colons{:})=min(vf.data(colons{:}),vf.dataLast(colons{:}));
+      end
     end
   end
 else
