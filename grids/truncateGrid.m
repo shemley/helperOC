@@ -2,7 +2,7 @@ function [gNew, dataNew] = truncateGrid(gOld, dataOld, xmin, xmax, process)
 % [gNew, dataNew] = truncateGrid(gOld, dataOld, xmin, xmax)
 %    Truncates dataOld to be within the bounds xmin and xmax
 %
-% Inputs: 
+% Inputs:
 %   gOld, gNew - old and new grid structures
 %   dataOld    - data corresponding to old grid structure
 %   process    - specifies whether to call processGrid to generate
@@ -34,7 +34,7 @@ for i = 1:gNew.dim
   if gNew.N(i) == 1
     gNew.max(i) = max(gNew.vs{i}) + small;
   else
-  gNew.max(i) = max(gNew.vs{i});
+    gNew.max(i) = max(gNew.vs{i});
   end
   if gNew.N(i) < gOld.N(i)
     gNew.bdry{i} = @addGhostExtrapolate;
