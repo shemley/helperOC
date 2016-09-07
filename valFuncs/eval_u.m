@@ -66,6 +66,12 @@ function v = eval_u_single(g, data, x, interp_method)
 % Mo Chen, 2015-10-15
 % Updated 2016-05-18
 
+% If the number of columns does not match the grid dimensions, try taking
+% transpose
+if size(x, 2) ~= g.dim
+  x = x';
+end
+
 %% Dealing with periodicity
 for i = 1:g.dim
   if isequal(g.bdry{i}, @addGhostPeriodic)
