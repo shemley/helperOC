@@ -13,13 +13,13 @@ function eval_u_test()
 addpath('..')
 
 %% Test 1: Basic test using spheres
-eval_u_test1()
+% eval_u_test1()
 
 %% Test 2: Periodic grids
 eval_u_test2()
 
 %% Test 3: Multiple value functions
-eval_u_test3()
+% eval_u_test3()
 end
 
 function eval_u_test1()

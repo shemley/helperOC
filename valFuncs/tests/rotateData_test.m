@@ -23,7 +23,7 @@ for i = 1:N
   title(['\theta = ' num2str(thetas(i))])
   axis square
   axis(g.axis)
-  view(2)
+  view(3)
 end
 
 
