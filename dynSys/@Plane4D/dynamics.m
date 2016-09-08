@@ -1,16 +1,46 @@
-function dx = dynamics(obj, t, x, u)
-% Dynamics of the Plane4
-%    \dot{x}_1 = v_x = x_4 * cos(x_3)
-%    \dot{x}_2 = v_y = x_4 * sin(x_3)
-%    \dot{x}_3 = u_2 = u_2
-%    \dot{x}_4 = u_1 = u_1
-%
+function dx = dynamics(obj, ~, x, u, d, dims)
+% dx = dynamics(obj, ~, x, u, d, dims)
+%     Dynamics of the Plane4D
+%         \dot{x}_1 = x_4 * cos(x_3) + d_1
+%         \dot{x}_2 = x_4 * sin(x_3) + d_1
+%         \dot{x}_3 = u_1 = u_1
+%         \dot{x}_4 = u_2 = u_2
 
-dx = zeros(obj.nx, 1);
+if nargin < 6
+  dims = 1:obj.nx;
+end
 
-dx(1) = x(4) * cos(x(3));
-dx(2) = x(4) * sin(x(3));
-dx(3) = u(1);
-dx(4) = u(2);
+dx = cell(obj.nx, 1);
 
+returnVector = false;
+if ~iscell(x)
+  returnVector = true;
+  x = num2cell(x);
+  u = num2cell(u);
+  d = num2cell(d);
+end
+
+for i = 1:length(dims)
+  dx{i} = dynamics_i(x, u, d, dims, dims(i));
+end
+
+if returnVector
+  dx = cell2mat(dx);
+end
+end
+
+function dx = dynamics_i(x, u, d, dims, dim)
+
+switch dim
+  case 1
+    dx = x{dims==4} .* cos(x{dims==3}) + d{1};
+  case 2
+    dx = x{dims==4} .* sin(x{dims==3}) + d{2};
+  case 3
+    dx = u{1};
+  case 4
+    dx = u{2};
+  otherwise
+    error('Only dimension 1-4 are defined for dynamics of Plane4D!')    
+end
 end
