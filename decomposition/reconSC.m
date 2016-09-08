@@ -139,10 +139,10 @@ if strcmp(minOverTime,'during')
         truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
       
       if i == 1
-        vf.dataMin = fillInMissingDims(vf.g,data_trunc,vfs.dims{i});
+        vf.dataMin = backProj(vf.g,data_trunc,vfs.dims{i});
       else
       vf.dataMin = max(vf.dataMin, ...
-        fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+        backProj(vf.g, data_trunc, vfs.dims{i}));
       end
 
     end
@@ -166,7 +166,7 @@ else
         truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
       
       vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
-        fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+        backProj(vf.g, data_trunc, vfs.dims{i}));
     end
   end
 end
