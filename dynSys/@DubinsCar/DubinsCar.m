@@ -24,9 +24,10 @@ classdef DubinsCar < DynSys
       % Dynamics:
       %    \dot{x}_1 = v * cos(x_3) + d1
       %    \dot{x}_2 = v * sin(x_3) + d2
-      %    \dot{x}_3 = u            + d3
+      %    \dot{x}_3 = u
       %         v \in [vrange(1), vrange(2)]
       %         u \in [-wMax, wMax]
+      %         d \in [-dMax, dMax]
       %
       % Inputs:
       %   x      - state: [xpos; ypos; theta]
@@ -45,6 +46,7 @@ classdef DubinsCar < DynSys
       obj.hdim = 3;   % Heading dimensions
       obj.nx = 3;
       obj.nu = 1;
+      obj.nd = 2;
       
       if numel(x) ~= obj.nx
         error('Initial state does not have right dimension!');
