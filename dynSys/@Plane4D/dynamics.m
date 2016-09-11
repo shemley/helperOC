@@ -1,14 +1,10 @@
-function dx = dynamics(obj, ~, x, u, d, dims)
-% dx = dynamics(obj, ~, x, u, d, dims)
+function dx = dynamics(obj, ~, x, u, d)
+% dx = dynamics(obj, ~, x, u, d)
 %     Dynamics of the Plane4D
 %         \dot{x}_1 = x_4 * cos(x_3) + d_1
 %         \dot{x}_2 = x_4 * sin(x_3) + d_1
 %         \dot{x}_3 = u_1 = u_1
 %         \dot{x}_4 = u_2 = u_2
-
-if nargin < 6
-  dims = 1:obj.nx;
-end
 
 dx = cell(obj.nx, 1);
 
@@ -20,8 +16,8 @@ if ~iscell(x)
   d = num2cell(d);
 end
 
-for i = 1:length(dims)
-  dx{i} = dynamics_i(x, u, d, dims, dims(i));
+for i = 1:length(obj.dims)
+  dx{i} = dynamics_i(x, u, d, obj.dims, obj.dims(i));
 end
 
 if returnVector

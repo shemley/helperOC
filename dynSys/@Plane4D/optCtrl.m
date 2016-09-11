@@ -1,5 +1,5 @@
-function uOpt = optCtrl(obj, ~, ~, deriv, uMode, dims)
-% uOpt = optCtrl(obj, t, y, deriv, uMode, dims)
+function uOpt = optCtrl(obj, ~, ~, deriv, uMode)
+% uOpt = optCtrl(obj, t, y, deriv, uMode)
 %     Dynamics of the Plane4D
 %         \dot{x}_1 = x_4 * cos(x_3) + d_1
 %         \dot{x}_2 = x_4 * sin(x_3) + d_2
@@ -11,10 +11,6 @@ if nargin < 5
   uMode = 'min';
 end
 
-if nargin < 6
-  dims = 1:obj.nx;
-end
-
 if ~iscell(deriv)
   deriv = num2cell(deriv);
 end
@@ -23,23 +19,25 @@ uOpt = cell(obj.nu, 1);
 
 %% Optimal control
 if strcmp(uMode, 'max')
-  if any(dims == 3)
-    uOpt{1} = (deriv{dims==3}>=0)*obj.wMax + (deriv{dims==3}<0)*(-obj.wMax);
+  if any(obj.dims == 3)
+    uOpt{1} = (deriv{obj.dims==3}>=0)*obj.wMax + ...
+      (deriv{obj.dims==3}<0)*(-obj.wMax);
   end
   
-  if any(dims == 4)
-    uOpt{2} = (deriv{dims==4}>=0)*obj.aRange(2) + ...
-      (deriv{dims==4}<0)*obj.aRange(1);
+  if any(obj.dims == 4)
+    uOpt{2} = (deriv{obj.dims==4}>=0)*obj.aRange(2) + ...
+      (deriv{obj.dims==4}<0)*obj.aRange(1);
   end
 
 elseif strcmp(uMode, 'min')
-  if any(dims == 3)
-    uOpt{1} = (deriv{dims==3}>=0)*(-obj.wMax) + (deriv{dims==3}<0)*obj.wMax;
+  if any(obj.dims == 3)
+    uOpt{1} = (deriv{obj.dims==3}>=0)*(-obj.wMax) + ...
+      (deriv{obj.dims==3}<0)*obj.wMax;
   end
   
-  if any(dims == 4)
-    uOpt{2} = (deriv{dims==4}>=0)*obj.aRange(1) + ...
-      (deriv{dims==4}<0)*obj.aRange(2);
+  if any(obj.dims == 4)
+    uOpt{2} = (deriv{obj.dims==4}>=0)*obj.aRange(1) + ...
+      (deriv{obj.dims==4}<0)*obj.aRange(2);
   end
 else
   error('Unknown uMode!')

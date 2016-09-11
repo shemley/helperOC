@@ -1,4 +1,4 @@
-function uOpt = optCtrl(obj, t, y, deriv, uMode, dims)
+function uOpt = optCtrl(obj, t, y, deriv, uMode)
 % uOpt = optCtrl(obj, t, y, deriv, uMode, dims)
 
 %% Input processing
@@ -7,7 +7,7 @@ if nargin < 5
 end
 
 if nargin < 6
-  dims = 1:obj.nx;
+  dims = obj.dims;
 end
 
 if ~iscell(deriv)

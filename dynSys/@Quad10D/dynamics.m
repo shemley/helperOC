@@ -1,5 +1,5 @@
-function dx = dynamics(obj, ~, x, u, ~, dims)
-% dx = dynamics(obj, ~, x, u, ~, dims)
+function dx = dynamics(obj, ~, x, u, ~)
+% dx = dynamics(obj, ~, x, u, ~)
 %     Dynamics of the 10D Quadrotor
 %         \dot x_1 = x_2
 %         \dot x_2 = g * tan(x_3)
@@ -14,7 +14,7 @@ function dx = dynamics(obj, ~, x, u, ~, dims)
 %              uMin <= [u1; u2; u3] <= uMax
 
 if nargin < 6
-  dims = 1:obj.nx;
+  dims = obj.dims;
 end
 
 if iscell(x)
