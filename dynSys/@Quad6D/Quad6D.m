@@ -21,7 +21,7 @@ classdef Quad6D < DynSys
 
     Iyy %moment of Inertia
     
-    l %whatever l is
+    l %length from center of mass to end
     
     dims %dimensions that are active
     
@@ -29,7 +29,7 @@ classdef Quad6D < DynSys
   
   methods
     function obj = Quad6D(x, T1Max, T1Min, T2Max, T2Min,...
-        m, grav, transDrag, rotDrag, Iyy, l)
+        m, grav, transDrag, rotDrag, Iyy, l, dims)
       % obj = Quad6D(x, T1Max, T1Min, T2Max, T2Min,...
       %  m, grav, transDrag, rotDrag, Iyy, l)
       %
@@ -54,14 +54,6 @@ classdef Quad6D < DynSys
       %
       % Sylvia Herbert 2016-9-12
       
-      if numel(x) ~= obj.nx
-        error('Initial state does not have right dimension!');
-      end
-      
-      if ~iscolumn(x)
-        x = x';
-      end
-
       if nargin < 2
         T1Max = 5;
       end
@@ -79,7 +71,7 @@ classdef Quad6D < DynSys
       end
       
       if nargin < 6
-        m = 5;
+        m = 3;
       end
       
       if nargin < 7
@@ -100,6 +92,10 @@ classdef Quad6D < DynSys
       
       if nargin < 11
         l = 5;
+      end
+      
+      if nargin <12
+        dims = [1 2 5 6];
       end
       
       % Basic vehicle properties
