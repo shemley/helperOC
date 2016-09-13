@@ -29,7 +29,7 @@ classdef Quad6D < DynSys
   
   methods
     function obj = Quad6D(x, T1Max, T1Min, T2Max, T2Min,...
-        m, grav, transDrag, rotDrag, Iyy, l, dims)
+        m, grav, transDrag, rotDrag, l, Iyy, dims)
       % obj = Quad6D(x, T1Max, T1Min, T2Max, T2Min,...
       %  m, grav, transDrag, rotDrag, Iyy, l)
       %
@@ -55,23 +55,23 @@ classdef Quad6D < DynSys
       % Sylvia Herbert 2016-9-12
       
       if nargin < 2
-        T1Max = 5;
+        T1Max = 36.7875/2;
       end
       
       if nargin < 3
-        T1Min = -T1Max;
+        T1Min = 0;
       end
       
       if nargin < 4
-        T2Max = 5;
+        T2Max = 36.7875/2;
       end
       
       if nargin < 5
-        T2Min = -T2Max;
+        T2Min =0;
       end
       
       if nargin < 6
-        m = 3;
+        m = 1.25; %kg
       end
       
       if nargin < 7
@@ -79,19 +79,19 @@ classdef Quad6D < DynSys
       end
       
       if nargin < 8
-        transDrag = 5;
+        transDrag = 0.25;
       end
       
       if nargin < 9
-        rotDrag = 5;
+        rotDrag = 0.02255;
       end
       
       if nargin < 10
-        Iyy = 5;
+        l = 0.5; %meters
       end
       
       if nargin < 11
-        l = 5;
+        Iyy = 0.03;
       end
       
       if nargin <12

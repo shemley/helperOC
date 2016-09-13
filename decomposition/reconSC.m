@@ -84,9 +84,9 @@ for i = 1:num_vfs
   
   gs_trunc{i} = truncateGrid(vfs.gs{i}, [], rl{i}, ru{i});
   
-  if any(gs_trunc{i}.N < minN)
-    warning(['Number of grid points is less than ' num2str(minN) '!'])
-  end
+%   if any(gs_trunc{i}.N < minN)
+%     warning(['Number of grid points is less than ' num2str(minN) '!'])
+%   end
 end
 
 %% Create full dimensional grid (no periodic dimensions will remain!)
