@@ -24,28 +24,19 @@ rxs{pdims(1)} = cos(-theta) * g.xs{pdims(1)} - sin(-theta) *g.xs{pdims(2)};
 rxs{pdims(2)} = sin(-theta) * g.xs{pdims(1)} + cos(-theta) *g.xs{pdims(2)};
 
 % Translate in angle
-small = 0.1;
 if ~isempty(adim)
   rxs{adim} = g.xs{adim} - theta;
-  
-  if abs(g.min(adim)) < small
-    rxs{adim} = wrapTo2Pi(rxs{adim});
-  end
-
-  if abs(g.min(adim) + pi) < small
-    rxs{adim} = wrapToPi(rxs{adim});
-  end  
 end
 
 %% Interpolate dataIn to get approximation of rotated data
 if g.dim == 2
   dataOut = eval_u(g, dataIn, [rxs{1}(:) rxs{2}(:)], interp_method);
-  dataOut(isnan(dataOut)) = max(dataOut(:));
+  dataOut(isnan(dataOut)) = max(dataOut);
   dataOut = reshape(dataOut, g.shape);
 else
   dataOut = ...
     eval_u(g, dataIn, [rxs{1}(:) rxs{2}(:) rxs{3}(:)], interp_method);
-  dataOut(isnan(dataOut)) = max(dataOut(:));
+  dataOut(isnan(dataOut)) = max(dataOut);
   dataOut = reshape(dataOut, g.shape);
 end
 end
