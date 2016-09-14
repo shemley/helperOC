@@ -3,7 +3,7 @@ HOW TO PICK THE RIGHT HAMILTONIAN:
 —————————————————————————————————
 To understand how to pick the right Hamiltonian, we have to first note the following facts:
 1) Level Set Toolbox (LST) by default solves an initial value PDE (IVP). The general form of an IVP is given by: D_t V + H(p, x, t) = 0 subject to V(0) = g(x). 
-2) The general form of a terminal value PDE (TVP) is given by: D_t U + H(p, x, t) = 0 subject to U(T) = g(x). An IVP can, however, be converted into a TVP. The corresponding IVP reads: D_t W - H(p, x, t) = 0 subject to W(0) = g(x). The TVP solution then is given by: U(x, t) = W(x, T-t)
+2) The general form of a terminal value PDE (TVP) is given by: D_t U + H(p, x, t) = 0 subject to U(T) = g(x). A TVP can, however, be converted into a IVP. The corresponding IVP reads: D_t W - H(p, x, t) = 0 subject to W(0) = g(x). The TVP solution then is given by: U(x, t) = W(x, T-t)
 3) The default form of (“unoptimized”) Hamiltonian, H, is given by p^T.f in any of the Hamiltonian file in this folder.
 
 With these facts in mind, we can find the correct Hamiltonian of any optimal control problem of interest by selecting the appropriate uMode, dMode and tMode. See some examples below:
