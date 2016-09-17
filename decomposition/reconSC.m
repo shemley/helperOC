@@ -76,11 +76,23 @@ end
 gs_trunc = cell(num_vfs, 1);
 rl = cell(num_vfs, 1);
 ru = cell(num_vfs, 1);
+small = 1e-3;
 
 minN = 3; % Minimum number of grid points
 for i = 1:num_vfs
   rl{i} = range_lower(vfs.dims{i});
   ru{i} = range_upper(vfs.dims{i});
+  
+  % If the number of grid points is less than the minimum, reduce the number of
+  % grid points to 1
+  for j = 1:vfs.gs{i}.dim
+    new_vs = vfs.gs{i}.vs{j}(vfs.gs{i}.vs{j} > rl{i}(j) & ...
+      vfs.gs{i}.vs{j} < ru{i}(j));
+    if numel(new_vs) <= minN
+      rl{i}(j) = new_vs(1) - small;
+      ru{i}(j) = new_vs(1) + small;
+    end
+  end
   
   gs_trunc{i} = truncateGrid(vfs.gs{i}, [], rl{i}, ru{i});
   
