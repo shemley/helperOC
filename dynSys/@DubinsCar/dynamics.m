@@ -18,7 +18,7 @@ else
   
   dx(1) = obj.speed * cos(x(3)) + d(1);
   dx(2) = obj.speed * sin(x(3)) + d(2);
-  dx(3) = u;
+  dx(3) = u + d(3);
 end
 end
 
@@ -30,7 +30,7 @@ switch dim
   case 2
     dx = obj.speed * sin(x{dims==3}) + d{2};
   case 3
-    dx = u;
+    dx = u + d{3};
   otherwise
     error('Only dimension 1-3 are defined for dynamics of DubinsCar!')
 end

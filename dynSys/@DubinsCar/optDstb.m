@@ -18,25 +18,19 @@ dOpt = cell(obj.nd, 1);
 
 %% Optimal control
 if strcmp(dMode, 'max')
-  if any(obj.dims == 1)
-    dOpt{1} = (deriv{obj.dims==1}>=0)*obj.dMax(1) + ...
-      (deriv{obj.dims==1}<0)*(-obj.dMax(1));
-  end
-  
-  if any(obj.dims == 2)
-    dOpt{2} = (deriv{obj.dims==2}>=0)*obj.dMax(2) + ...
-      (deriv{obj.dims==2}<0)*(-obj.dMax(2));
+  for i = 1:3
+    if any(obj.dims == i)
+      dOpt{i} = (deriv{obj.dims==i}>=0)*obj.dMax(i) + ...
+        (deriv{obj.dims==i}<0)*(-obj.dMax(i));
+    end
   end
 
 elseif strcmp(dMode, 'min')
-  if any(obj.dims == 1)
-    dOpt{1} = (deriv{obj.dims==1}>=0)*(-obj.dMax(1)) + ...
-      (deriv{obj.dims==1}<0)*obj.dMax(1);
-  end
-  
-  if any(obj.dims == 2)
-    dOpt{2} = (deriv{obj.dims==2}>=0)*(-obj.dMax(2)) + ...
-      (deriv{obj.dims==2}<0)*obj.dMax(2);
+  for i = 1:3
+    if any(obj.dims == i)
+      dOpt{i} = (deriv{obj.dims==i}>=0)*(-obj.dMax(i)) + ...
+        (deriv{obj.dims==i}<0)*obj.dMax(i);
+    end
   end
 else
   error('Unknown dMode!')
