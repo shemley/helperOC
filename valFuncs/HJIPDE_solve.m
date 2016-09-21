@@ -22,6 +22,7 @@ function [data, tau, extraOuts] = ...
 %     .plotData:   information required to plot the data (need to fill in)
 %     .deleteLastPlot:
 %         set to true to delete previous plot before displaying next one
+%     .fig_num:   List if you want to plot on a specific figure number
 %     .fig_filename:
 %         provide this to save the figures (requires export_fig package)
 %     .stopInit:   stop the computation once the reachable set includes the
@@ -166,7 +167,11 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   end
   
   % Initialize the figure for visualization  
-  f = figure;
+  if isfield(extraArgs,'fig_num')
+    f = figure(extraArgs.fig_num);
+  else
+    f = figure;
+  end
   hold on
   need_light = true;
   
@@ -399,7 +404,7 @@ for i = istart:length(tau)
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, gPlot.dim, false);
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'k', 0, gPlot.dim, false);
     
     if strcmp(obsMode, 'time-varying')
       extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
