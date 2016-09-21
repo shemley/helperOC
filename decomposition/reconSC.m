@@ -1,4 +1,4 @@
-function vf = reconSC(vfs, range_lower, range_upper, minOverTime)
+function vf = reconSC(vfs, range_lower, range_upper, minOverTime, constrType)
 % vf = reconSC(vfs_SC, range_lower, range_upper)
 %
 % Inputs:
@@ -19,9 +19,12 @@ function vf = reconSC(vfs, range_lower, range_upper, minOverTime)
 %     grid points of the state x)
 %   minOverTime - options:
 %                 0 - do not min over time (defaults to this)
-%                 'end' - minovertime at the end (saves both dataMin and 
-%                         all data over time) 
+%                 'end' - minovertime at the end (saves both dataMin and
+%                         all data over time)
 %                 'during' - minovertime during (saves only dataMin)
+%  constrType - options
+%     'max' - takes maximum over subsystem value functions (default)
+%     'min' - takes minimum over subsystem value functions
 %
 % Output:
 %   vf    - value function within the computation range
@@ -72,15 +75,31 @@ for i = 1:num_vfs
   end
 end
 
+if nargin < 5
+  constrType = 'max';
+end
+
 %% Truncate grids according to the computation range
 gs_trunc = cell(num_vfs, 1);
 rl = cell(num_vfs, 1);
 ru = cell(num_vfs, 1);
+small = 1e-3;
 
 minN = 3; % Minimum number of grid points
 for i = 1:num_vfs
   rl{i} = range_lower(vfs.dims{i});
   ru{i} = range_upper(vfs.dims{i});
+  
+  % If the number of grid points is less than the minimum, reduce the number of
+  % grid points to 1
+  for j = 1:vfs.gs{i}.dim
+    new_vs = vfs.gs{i}.vs{j}(vfs.gs{i}.vs{j} > rl{i}(j) & ...
+      vfs.gs{i}.vs{j} < ru{i}(j));
+    if numel(new_vs) <= minN
+      rl{i}(j) = new_vs(1) - small;
+      ru{i}(j) = new_vs(1) + small;
+    end
+  end
   
   gs_trunc{i} = truncateGrid(vfs.gs{i}, [], rl{i}, ru{i});
   
@@ -141,19 +160,28 @@ if strcmp(minOverTime,'during')
       if i == 1
         vf.dataMin = backProj(vf.g,data_trunc,vfs.dims{i});
       else
-      vf.dataMin = max(vf.dataMin, ...
-        backProj(vf.g, data_trunc, vfs.dims{i}));
+        if strcmp(constrType, 'min')
+          vf.dataMin = min(vf.dataMin, ...
+            backProj(vf.g, data_trunc, vfs.dims{i}));
+        else
+          vf.dataMin = max(vf.dataMin, ...
+            backProj(vf.g, data_trunc, vfs.dims{i}));
+        end
       end
-
+      
     end
-      if t>1
-        vf.dataMin=min(vf.dataMin,vf.dataLast);
-      end
-     vf.dataLast = vf.dataMin;
+    if t>1
+      vf.dataMin = min(vf.dataMin,vf.dataLast);
+    end
+    vf.dataLast = vf.dataMin;
   end
 else
   %% Expand look-up tables to fill in missing dimensions
-  vf.data = -inf([vf.g.N' length(vf.tau)]);
+  if strcmp(constrType, 'min')
+    vf.data = inf([vf.g.N' length(vf.tau)]);
+  else
+    vf.data = -inf([vf.g.N' length(vf.tau)]);
+  end
   colons = repmat({':'}, 1, vf.g.dim);
   
   for t = 1:length(vf.tau)
@@ -165,8 +193,14 @@ else
       [~, data_trunc] = ...
         truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
       
-      vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
-        backProj(vf.g, data_trunc, vfs.dims{i}));
+      if strcmp(constrType, 'min')
+        vf.data(colons{:}, t) = min(vf.data(colons{:}, t), ...
+          backProj(vf.g, data_trunc, vfs.dims{i}));
+      else
+        vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
+          backProj(vf.g, data_trunc, vfs.dims{i}));
+      end
+      
     end
   end
 end
@@ -190,7 +224,7 @@ for i = 1:vf.g.dim
 end
 
 %% If we're just interested in min over time, min over all vf.data
-if strcmp(minOverTime,'end')
+if strcmp(minOverTime, 'end')
   vf.dataMin = min(vf.data, [], vf.g.dim+1);
 end
 end
