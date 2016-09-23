@@ -404,13 +404,13 @@ for i = istart:length(tau)
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'k', 0, gPlot.dim, false);
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, gPlot.dim, false);
     
     if strcmp(obsMode, 'time-varying')
       extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
     end
     
-    if need_light && gDim == 3
+    if need_light && gPlot.dim == 3
       camlight left
       camlight right
       need_light = false;
