@@ -7,6 +7,10 @@ function dx = dynamics(obj, ~, x, u, d)
 %
 % Mo Chen, 2016-06-08
 
+if nargin < 5
+  [0; 0; 0];
+end
+
 if iscell(x)
   dx = cell(length(obj.dims), 1);
   
