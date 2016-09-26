@@ -43,10 +43,9 @@ end
 % end
 
 if strcmp(side, 'lower')
-%   dataIm = repmat(dataMIE, gIm.N(1), 1) - gIm.xs{1};
-  dataIm = fillInMissingDims(gIm, dataMIE, 2:gIm.dim) - gIm.xs{1};
+  dataIm = backProj(gIm, dataMIE, 2:gIm.dim) - gIm.xs{1};
 else
-  dataIm = gIm.xs{1} - fillInMissingDims(gIm, dataMIE, 2:gIm.dim);
+  dataIm = gIm.xs{1} - backProj(gIm, dataMIE, 2:gIm.dim);
 end
 
 end
