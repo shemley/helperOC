@@ -1,8 +1,8 @@
 classdef DynSys < handle
-  % Dynamical Systems class
-  %   Subclasses: quadrotor, Dubins vehicle (under construction)
-  
-  properties
+  % Dynamical Systems class; inherits from handle to make objects behave like
+  % pointers
+    
+  properties % For bookkeepping and plotting
     nx          % Number of state dimensions
     nu          % Number of control inputs
     nd          % Number of disturbance dimensions
@@ -27,7 +27,7 @@ classdef DynSys < handle
     hpv = cell(2,1);
     hpvhist = cell(2,1);
     
-    % Data (any data that you may want to store for convenience)
+    % Data (any data that one may want to store for convenience)
     data
   end % end properties
 

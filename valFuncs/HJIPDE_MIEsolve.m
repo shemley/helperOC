@@ -2,9 +2,10 @@ function [datal, datau, tau, extraOuts] = HJIPDE_MIEsolve( ...
   data0l, data0u, tau, schemeData, minWith, extraArgs)
 % [data, tau] = HJIPDE_solve( ...
 %   data0, tau, schemeData, minWith, extraargs)
-%
-% Solves HJIPDE with initial conditions data0, at times tau, and with
-% parameters schemeData and obstacles
+%     Solves HJIPDE via MIE with initial conditions data0, at times tau, and 
+%     with parameters schemeData and obstacles.
+%     ----- mostly copied from HJIPDE_solve, but attempts to take into account
+%     interaction between the two MIE functions (lower and upper) -----
 %
 % Inputs:
 %   data0      - initial value function
@@ -164,8 +165,6 @@ for i = 2:length(tau)
       datal(colons{:}, i-1), datau(colons{:}, i-1));
     schemeDataLower.deriv(2:end) = pLower;
     schemeDataUpper.deriv(2:end) = pUpper;
-    
- 
     
     [~, yl] = feval(integratorFunc, schemeFunc, [tNow tau(i)], yl, ...
       integratorOptions, schemeDataLower);

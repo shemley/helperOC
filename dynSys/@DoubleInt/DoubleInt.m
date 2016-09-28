@@ -1,4 +1,5 @@
 classdef DoubleInt < DynSys
+  % Double integrator class; subclass of DynSys (dynamical system)
   properties
     uMin    % Control bounds
     uMax
@@ -7,7 +8,16 @@ classdef DoubleInt < DynSys
  
   methods
     function obj = DoubleInt(x, urange)
-      %% Basic properties
+      % DoubleInt(x, urange)
+      %     Constructor for the double integrator
+      %
+      % Inputs:
+      %     x - initial state (ignored in reachability computations; only used
+      %         for simulation)
+      %     urange - control bounds
+      %
+      
+      %% Basic properties for bookkeepping
       obj.pdim = 1;
       obj.vdim = 2;
       obj.nx = 2;
@@ -29,7 +39,7 @@ classdef DoubleInt < DynSys
       end
       
       obj.x = x;
-      obj.xhist = x;
+      obj.xhist = x; % State history (only used for simulation)
   
       %% Process control range
       if nargin < 2

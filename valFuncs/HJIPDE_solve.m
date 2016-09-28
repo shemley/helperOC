@@ -83,8 +83,6 @@ g = schemeData.grid;
 gDim = g.dim;
 colons = repmat({':'}, 1, gDim);
 
-
-
 %% Extract the information from extraargs
 % Extract the information about obstacles
 obsMode = 'none';

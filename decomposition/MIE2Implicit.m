@@ -1,4 +1,15 @@
 function [gIm, dataIm] = MIE2Implicit(gMIE, dataMIE, side, gTI)
+% [gIm, dataIm] = MIE2Implicit(gMIE, dataMIE, side, gTI)
+%     Converts an MIE upper or lower function to a full-implicit function
+%
+% Inputs:
+%     gMIE, dataMIE: grid and MIE function
+%     side:          "side" of the MIE function, must be 'upper' or 'lower'
+%     gTI:           grid in the terminal integrator dimension (used to
+%                    construct full grid)
+%
+% Outputs:
+%     gIm, dataIm:  grid and fully-implicit function
 
 if ~strcmp(side, 'lower') && ~strcmp(side, 'upper')
   error('side must be ''lower'' or ''upper''!')
@@ -28,20 +39,6 @@ if nargout < 2
 end
 
 %% Create implicit value function
-% % Preprocess MIE value function
-% switch gMIE.dim
-%   case 1
-%     dataMIE = dataMIE';
-%   case 2
-%     temp = zeros([1 size(dataMIE)]);
-%     temp(1,:,:) = dataMIE;
-%     dataMIE = temp;
-%   case 3
-%     temp = zeros([1 size(dataMIE)]);
-%     temp(1,:,:,:) = dataMIE;
-%     dataMIE = temp;
-% end
-
 if strcmp(side, 'lower')
   dataIm = backProj(gIm, dataMIE, 2:gIm.dim) - gIm.xs{1};
 else
