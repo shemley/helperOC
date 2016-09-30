@@ -35,7 +35,7 @@ classdef DubinsCar < DynSys
       %
       % Output:
       %   obj       - a DubinsCar object
-     
+      
       if numel(x) ~= obj.nx
         error('Initial state does not have right dimension!');
       end
@@ -59,13 +59,13 @@ classdef DubinsCar < DynSys
       if nargin < 5
         dims = 1:3;
       end
-        
+      
       % Basic vehicle properties
-      obj.pdim = 1:2; % Position dimensions
-      obj.hdim = 3;   % Heading dimensions
+      obj.pdim = [find(dims == 1) find(dims == 2)]; % Position dimensions
+      obj.hdim = find(dims == 3);   % Heading dimensions
       obj.nx = length(dims);
       obj.nu = 1;
-      obj.nd = 3;      
+      obj.nd = 3;
       
       obj.x = x;
       obj.xhist = obj.x;

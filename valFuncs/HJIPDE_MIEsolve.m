@@ -2,7 +2,7 @@ function [datal, datau, tau, extraOuts] = HJIPDE_MIEsolve( ...
   data0l, data0u, tau, schemeData, minWith, extraArgs)
 % [data, tau] = HJIPDE_solve( ...
 %   data0, tau, schemeData, minWith, extraargs)
-%     Solves HJIPDE via MIE with initial conditions data0, at times tau, and 
+%     Solves HJIPDE via MIE with initial conditions data0, at times tau, and
 %     with parameters schemeData and obstacles.
 %     ----- mostly copied from HJIPDE_solve, but attempts to take into account
 %     interaction between the two MIE functions (lower and upper) -----
@@ -51,7 +51,7 @@ end
 
 extraOuts = [];
 small = 1e-4;
-colons = repmat({':'}, 1, schemeData.grid.dim);
+clns = repmat({':'}, 1, schemeData.grid.dim); % colons
 
 %% Extract the information from extraargs
 if isfield(extraArgs, 'visualize') && extraArgs.visualize
@@ -112,8 +112,8 @@ else
   datau = zeros([size(data0u) length(tau)]);
 end
 
-datal(colons{:}, 1) = data0l;
-datau(colons{:}, 1) = data0u;
+datal(clns{:}, 1) = data0l;
+datau(clns{:}, 1) = data0u;
 
 schemeDataLower = schemeData;
 schemeDataUpper = schemeData;
@@ -123,10 +123,15 @@ schemeDataLower.side = 'lower';
 
 schemeDataUpper.deriv = cell(schemeData.grid.dim+1, 1);
 schemeDataUpper.side = 'upper';
+% if strcmp(schemeData.uMode, 'min')
+%   schemeDataUpper.uMode = 'max';
+% elseif strcmp(schemeData.uMode, 'max')
+%   schemeDataUpper.uMode = 'min';
+% end
+
 for i = 2:length(tau)
-  %   y0 = eval(get_dataStr(g.dim, 'i-1'));
-  y0l = datal(colons{:}, i-1);
-  y0u = datau(colons{:}, i-1);
+  y0l = datal(clns{:}, i-1);
+  y0u = datau(clns{:}, i-1);
   yl = y0l(:);
   yu = y0u(:);
   
@@ -139,33 +144,33 @@ for i = 2:length(tau)
       yuLast = yu;
     end
     
-    % Terminal integrator derivative
-    [pLowerL, pLowerR, pUpperL, pUpperR] = ...
-      jointTIgrad(avDeriv, datal(colons{:}, i-1), datau(colons{:}, i-1));
+%     % Terminal integrator derivative
+%     [pLowerL, pLowerR, pUpperL, pUpperR] = ...
+%       jointTIgrad(avDeriv, datal(clns{:}, i-1), datau(clns{:}, i-1));
+%     
+%     schemeDataLower.deriv{1} = 0.5*(pLowerL + pLowerR);
+%     schemeDataUpper.deriv{1} = 0.5*(pUpperL + pUpperR);
     
-    schemeDataLower.deriv{1} = 0.5*(pLowerL + pLowerR);
-    schemeDataUpper.deriv{1} = 0.5*(pUpperL + pUpperR);
-      
-    % Use dissipation compensation?
-    if schemeData.dissComp
-      % Dissipation compensation
-      schemeDataLower.dc = dissComp( ...
-        pLowerL, pLowerR, tau(i), datal(colons{:}, i-1), schemeDataLower);
-      schemeDataUpper.dc = dissComp( ...
-        pUpperL, pUpperR, tau(i), datau(colons{:}, i-1), schemeDataUpper);
-    end
-    
-    if ~schemeData.trueTIDeriv
-      schemeDataLower.deriv{1} = -1;
-      schemeDataUpper.deriv{1} = 1;
-    end
+%     % Use dissipation compensation?
+%     if schemeData.dissComp
+%       % Dissipation compensation
+%       schemeDataLower.dc = dissComp( ...
+%         pLowerL, pLowerR, tau(i), datal(clns{:}, i-1), schemeDataLower);
+%       schemeDataUpper.dc = dissComp( ...
+%         pUpperL, pUpperR, tau(i), datau(clns{:}, i-1), schemeDataUpper);
+%     end
+%     
+%     if ~schemeData.trueTIDeriv
+%       schemeDataLower.deriv{1} = -1;
+%       schemeDataUpper.deriv{1} = 1;
+%     end
     
     % Implicit dimension derivatives
-    [pLower, pUpper] = jointMIEgrad(schemeData.grid, ...
-      datal(colons{:}, i-1), datau(colons{:}, i-1));
-    schemeDataLower.deriv(2:end) = pLower;
-    schemeDataUpper.deriv(2:end) = pUpper;
-    
+    [pLower, pUpper] = jointMIEgrad(schemeData.grid, datal(clns{:}, i-1), ...
+      datau(clns{:}, i-1));
+    schemeDataLower.deriv = pLower;
+    schemeDataUpper.deriv = pUpper;
+
     [~, yl] = feval(integratorFunc, schemeFunc, [tNow tau(i)], yl, ...
       integratorOptions, schemeDataLower);
     
@@ -180,8 +185,8 @@ for i = 2:length(tau)
   end
   
   % Reshape value function
-  datal(colons{:}, i) = reshape(yl, schemeData.grid.shape);
-  datau(colons{:}, i) = reshape(yu, schemeData.grid.shape);
+  datal(clns{:}, i) = reshape(yl, schemeData.grid.shape);
+  datau(clns{:}, i) = reshape(yu, schemeData.grid.shape);
   
   %% If commanded, visualize the level set.
   if isfield(extraArgs, 'visualize') && extraArgs.visualize
@@ -203,7 +208,7 @@ for i = 2:length(tau)
     figure(f)
     
     if projDims == 0
-      extraOuts.hT = visSetMIE(schemeData.grid, datal(colons{:}, i), ...
+      extraOuts.hT = visSetMIE(schemeData.grid, datal(clns{:}, i), ...
         'r', 0, [], false);
       
       if need_light && schemeData.grid.dim == 3
@@ -212,7 +217,7 @@ for i = 2:length(tau)
         need_light = false;
       end
     else
-      [gProj, dataProj] = proj(schemeData.grid, datal(colons{:}, i), ...
+      [gProj, dataProj] = proj(schemeData.grid, datal(clns{:}, i), ...
         1-plotDims, projpt);
       extraOuts.hT = visSetMIE(gProj, dataProj, 'r', 0, [], false);
       

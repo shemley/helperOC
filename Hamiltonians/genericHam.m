@@ -21,21 +21,6 @@ if isfield(schemeData, 'deriv')
   deriv = schemeData.deriv;
 end
 
-%% Copy state matrices in case we're doing MIE
-% Dimension information (in case we're doing MIE)
-% TIdim = [];
-% dims = 1:dynSys.nx;
-% if isfield(schemeData, 'MIEdims')
-%   %   TIdim = schemeData.TIdim;
-%   dims = schemeData.MIEdims;
-% end
-% %
-% TIderiv = -1; % Coefficient correction (for MIE only)
-% dc = 0; % Dissipation compensation (for MIE only)
-
-% x = cell(dynSys.nx, 1);
-% x(dims) = g.xs;
-
 %% Optimal control and disturbance
 if isfield(schemeData, 'uIn')
   u = schemeData.uIn;
@@ -49,38 +34,44 @@ else
   d = dynSys.optDstb(t, schemeData.grid.xs, deriv, schemeData.dMode);
 end
 
-%% Plug optimal control into dynamics to compute Hamiltonian
-dx = dynSys.dynamics(t, schemeData.grid.xs, u, d);
-
 hamValue = 0;
+%% MIE
 if isfield(schemeData, 'side')
   if strcmp(schemeData.side, 'lower')
-    if schemeData.dissComp
-      hamValue = hamValue - schemeData.dc;
-    end
-    
+%     if schemeData.dissComp
+%       hamValue = hamValue - schemeData.dc;
+%     end
+%     
+    TIderiv = -1;
   elseif strcmp(schemeData.side, 'upper')
-    if schemeData.dissComp
-      hamValue = hamValue + schemeData.dc;
-    end
+%     if schemeData.dissComp
+%       hamValue = hamValue + schemeData.dc;
+%     end
     
-    deriv{1} = -deriv{1};
-    if schemeData.trueMIEDeriv
-      deriv{2} = -deriv{2};
-    end
-    
+%     hamValue = -hamValue;
+%     deriv{1} = -deriv{1};
+% %     if schemeData.trueMIEDeriv
+% %       deriv{2} = -deriv{2};
+% %     end
+    TIderiv = 1;
   else
     error('Side of an MIE function must be upper or lower!')
   end
   
-  if ~schemeData.trueMIEDeriv
-    deriv(2) = computeGradients(schemeData.grid, data);
-  end
+%   if ~schemeData.trueMIEDeriv
+%     deriv(2) = computeGradients(schemeData.grid, data);
+%   end
 end
 
-% for i = 1:length(dims)
+%% Plug optimal control into dynamics to compute Hamiltonian
+dx = dynSys.dynamics(t, schemeData.grid.xs, u, d);
 for i = 1:dynSys.nx
   hamValue = hamValue + deriv{i}.*dx{i};
+end
+
+if isprop(dynSys, 'TIdim') && ~isempty(dynSys.TIdim)
+  TIdx = dynSys.TIdyn(t, schemeData.grid.xs, u, d);
+  hamValue = hamValue + TIderiv*TIdx{1};
 end
 
 %% Negate hamValue if backward reachable set
@@ -88,4 +79,9 @@ if strcmp(schemeData.tMode, 'backward')
   hamValue = -hamValue;
 end
 
+if isfield(schemeData, 'side')
+  if strcmp(schemeData.side, 'upper')
+    hamValue = -hamValue;
+  end
+end
 end
