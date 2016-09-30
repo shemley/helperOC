@@ -1,5 +1,5 @@
 function [data, tau, extraOuts] = ...
-  HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
+  HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs,quiet)
 % [data, tau, extraOuts] = ...
 %   HJIPDE_solve(data0, tau, schemeData, minWith, extraargs)
 %     Solves HJIPDE with initial conditions data0, at times tau, and with
@@ -22,6 +22,7 @@ function [data, tau, extraOuts] = ...
 %     .plotData:   information required to plot the data (need to fill in)
 %     .deleteLastPlot:
 %         set to true to delete previous plot before displaying next one
+%     .fig_num:   List if you want to plot on a specific figure number
 %     .fig_filename:
 %         provide this to save the figures (requires export_fig package)
 %     .stopInit:   stop the computation once the reachable set includes the
@@ -75,6 +76,10 @@ end
 
 if nargin < 5
   extraArgs = [];
+end
+
+if nargin < 6
+  quiet = 0;
 end
 
 extraOuts = [];
@@ -162,7 +167,11 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   end
   
   % Initialize the figure for visualization  
-  f = figure;
+  if isfield(extraArgs,'fig_num')
+    f = figure(extraArgs.fig_num);
+  else
+    f = figure;
+  end
   hold on
   need_light = true;
   
@@ -237,7 +246,9 @@ else
 end
 
 for i = istart:length(tau)
-  fprintf('tau(i) = %f\n', tau(i))
+  if quiet == 0
+    fprintf('tau(i) = %f\n', tau(i))
+  end
   %% Variable schemeData
   if isfield(extraArgs, 'SDModFunc')
     if isfield(extraArgs, 'SDModParams')
@@ -261,7 +272,10 @@ for i = istart:length(tau)
       yLast = y;
     end
     
+    if quiet == 0 
     fprintf('  Computing [%f %f]...\n', tNow, tau(i))
+    end
+    
     [tNow, y] = feval(integratorFunc, schemeFunc, [tNow tau(i)], y, ...
       integratorOptions, schemeData);
     
@@ -295,7 +309,9 @@ for i = istart:length(tau)
   
   if stopConverge
     change = max(abs(y - y0(:)));
+    if quiet == 0
     fprintf('Max change since last iteration: %f\n', change)
+    end
   end
   
   % Reshape value function
@@ -350,7 +366,7 @@ for i = istart:length(tau)
       error('Mismatch between plot and grid dimensions!');
     end
     
-    if (pDims >= 4 || gDim > 4)
+    if (pDims > 4 || gDim > 4)
       error('Currently plotting up to 3D is supported!');
     end
     
@@ -359,7 +375,13 @@ for i = istart:length(tau)
     
     if deleteLastPlot 
       if isfield(extraOuts, 'hT')
-        delete(extraOuts.hT);
+        if iscell(extraOuts.hT)
+          for hi = 1:length(extraOuts.hT)
+            delete(extraOuts.hT{hi})
+          end
+        else
+          delete(extraOuts.hT);
+        end
       end
       
       if isfield(extraOuts, 'hO') && strcmp(obsMode, 'time-varying')
@@ -382,13 +404,13 @@ for i = istart:length(tau)
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, [], false);
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, gPlot.dim, false);
     
     if strcmp(obsMode, 'time-varying')
       extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
     end
     
-    if need_light && gDim == 3
+    if need_light && gPlot.dim == 3
       camlight left
       camlight right
       need_light = false;
@@ -411,7 +433,9 @@ for i = istart:length(tau)
 end
 
 endTime = cputime;
+if quiet == 0;
 fprintf('Total execution time %g seconds\n', endTime - startTime);
+end
 end
 
 function [dissFunc, integratorFunc, derivFunc] = ...

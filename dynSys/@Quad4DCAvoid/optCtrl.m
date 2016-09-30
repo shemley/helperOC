@@ -12,14 +12,27 @@ if ~iscell(deriv)
   deriv = num2cell(deriv);
 end
 
+dims = obj.dims;
 %% Optimal control
 if strcmp(uMode, 'max')
-  uOpt{1} = (-deriv{2}>=0)*obj.aMax(1) + (-deriv{2}<0)*(-obj.aMax(1));
-  uOpt{2} = (-deriv{4}>=0)*obj.aMax(2) + (-deriv{4}<0)*(-obj.aMax(2));
+  if any(dims == 2)
+  uOpt{1} = (-deriv{dims==2}>=0)*obj.aMax(1) + (-deriv{dims==2}<0)*(-obj.aMax(1));
+  end
+  
+  if any(dims == 4)
+  uOpt{2} = (-deriv{dims==4}>=0)*obj.aMax(2) + (-deriv{dims==4}<0)*(-obj.aMax(2));
+  end
+  
 elseif strcmp(uMode, 'min')
-  uOpt{1} = (-deriv{2}>=0)*(-obj.aMax(1)) + (-deriv{2}<0)*obj.aMax(1);
-  uOpt{2} = (-deriv{4}>=0)*(-obj.aMax(2)) + (-deriv{4}<0)*obj.aMax(2);
-else
+  if any(dims == 2)
+  uOpt{1} = (-deriv{dims==2}>=0)*(-obj.aMax(1)) + (-deriv{dims==2}<0)*obj.aMax(1);
+  end
+  
+  if any(dims == 4)
+  uOpt{2} = (-deriv{dims==4}>=0)*(-obj.aMax(2)) + (-deriv{dims==4}<0)*obj.aMax(2);
+  end
+
+  else
   error('Unknown uMode!')
 end
 

@@ -1,4 +1,4 @@
-function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
+function vf = reconSC(vfs, range_lower, range_upper, minOverTime, constrType)
 % vf = reconSC(vfs_SC, range_lower, range_upper)
 %
 % Inputs:
@@ -17,6 +17,14 @@ function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
 %   range_upper - upper range of computation domain
 %     (by default, lower and upper ranges are chosen to be within a few
 %     grid points of the state x)
+%   minOverTime - options:
+%                 0 - do not min over time (defaults to this)
+%                 'end' - minovertime at the end (saves both dataMin and
+%                         all data over time)
+%                 'during' - minovertime during (saves only dataMin)
+%  constrType - options
+%     'max' - takes maximum over subsystem value functions (default)
+%     'min' - takes minimum over subsystem value functions
 %
 % Output:
 %   vf    - value function within the computation range
@@ -25,8 +33,6 @@ function vf = reconSC(vfs, range_lower, range_upper,minOverTime)
 %             .g
 %             .data
 %             .tau
-%
-% Mo Chen, 2016-05-15
 
 %% Input checking
 % Grids and corresponding value functions
@@ -64,26 +70,42 @@ end
 
 % Subsystem grid dimensions
 for i = 1:num_vfs
-  if vfs.gs{i}.dim ~= length(vfs.dims)
+  if vfs.gs{i}.dim ~= length(vfs.dims{i})
     error('Grid dimensions are inconsistent!')
   end
+end
+
+if nargin < 5
+  constrType = 'max';
 end
 
 %% Truncate grids according to the computation range
 gs_trunc = cell(num_vfs, 1);
 rl = cell(num_vfs, 1);
 ru = cell(num_vfs, 1);
+small = 1e-3;
 
 minN = 3; % Minimum number of grid points
 for i = 1:num_vfs
   rl{i} = range_lower(vfs.dims{i});
   ru{i} = range_upper(vfs.dims{i});
   
+  % If the number of grid points is less than the minimum, reduce the number of
+  % grid points to 1
+  for j = 1:vfs.gs{i}.dim
+    new_vs = vfs.gs{i}.vs{j}(vfs.gs{i}.vs{j} > rl{i}(j) & ...
+      vfs.gs{i}.vs{j} < ru{i}(j));
+    if numel(new_vs) <= minN
+      rl{i}(j) = new_vs(1) - small;
+      ru{i}(j) = new_vs(1) + small;
+    end
+  end
+  
   gs_trunc{i} = truncateGrid(vfs.gs{i}, [], rl{i}, ru{i});
   
-  if any(gs_trunc{i}.N < minN)
-    warning(['Number of grid points is less than ' num2str(minN) '!'])
-  end
+%   if any(gs_trunc{i}.N < minN)
+%     warning(['Number of grid points is less than ' num2str(minN) '!'])
+%   end
 end
 
 %% Create full dimensional grid (no periodic dimensions will remain!)
@@ -121,24 +143,88 @@ vf.g = createGrid(grid_min, grid_max, N);
 %% Time stamps
 vf.tau = vfs.tau;
 
-%% Expand look-up tables to fill in missing dimensions
-vf.data = -inf([vf.g.N' length(vf.tau)]); 
-colons = repmat({':'}, 1, vf.g.dim);
-
-for i = 1:num_vfs
-  colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
-
+if strcmp(minOverTime,'during')
+  %% Expand look-up tables to fill in missing dimensions
+  %vf.data = -inf(vf.g.N');
+  %colons = repmat({':'}, 1, vf.g.dim);
+  
   for t = 1:length(vf.tau)
-    [~, data_trunc] = ...
-      truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
     
-    vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
-      fillInMissingDims(vf.g, data_trunc, vfs.dims{i}));
+    for i = 1:num_vfs
+      colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
+      
+      
+      [~, data_trunc] = ...
+        truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
+      
+      if i == 1
+        vf.dataMin = backProj(vf.g,data_trunc,vfs.dims{i});
+      else
+        if strcmp(constrType, 'min')
+          vf.dataMin = min(vf.dataMin, ...
+            backProj(vf.g, data_trunc, vfs.dims{i}));
+        else
+          vf.dataMin = max(vf.dataMin, ...
+            backProj(vf.g, data_trunc, vfs.dims{i}));
+        end
+      end
+      
+    end
+    if t>1
+      vf.dataMin = min(vf.dataMin,vf.dataLast);
+    end
+    vf.dataLast = vf.dataMin;
+  end
+else
+  %% Expand look-up tables to fill in missing dimensions
+  if strcmp(constrType, 'min')
+    vf.data = inf([vf.g.N' length(vf.tau)]);
+  else
+    vf.data = -inf([vf.g.N' length(vf.tau)]);
+  end
+  colons = repmat({':'}, 1, vf.g.dim);
+  
+  for t = 1:length(vf.tau)
+    
+    for i = 1:num_vfs
+      colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
+      
+      
+      [~, data_trunc] = ...
+        truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
+      
+      if strcmp(constrType, 'min')
+        vf.data(colons{:}, t) = min(vf.data(colons{:}, t), ...
+          backProj(vf.g, data_trunc, vfs.dims{i}));
+      else
+        vf.data(colons{:}, t) = max(vf.data(colons{:}, t), ...
+          backProj(vf.g, data_trunc, vfs.dims{i}));
+      end
+      
+    end
   end
 end
 
+%% Get rid of singleton dimensions
+if isfield(vf,'data')
+  vf.data = squeeze(vf.data);
+end
+vf.g.dim = nnz(vf.g.N > 1.5);
+vf.g.min = vf.g.min(vf.g.N > 1.5);
+vf.g.max = vf.g.max(vf.g.N > 1.5);
+vf.g.dx = vf.g.dx(vf.g.N > 1.5);
+vf.g.bdry = vf.g.bdry(vf.g.N > 1.5);
+vf.g.bdryData = vf.g.bdryData(vf.g.N > 1.5);
+vf.g.vs = vf.g.vs(vf.g.N > 1.5);
+vf.g.xs = vf.g.xs(vf.g.N > 1.5);
+vf.g.shape = vf.g.shape(vf.g.N > 1.5);
+vf.g.N = vf.g.N(vf.g.N > 1.5);
+for i = 1:vf.g.dim
+  vf.g.xs{i} = squeeze(vf.g.xs{i});
+end
+
 %% If we're just interested in min over time, min over all vf.data
-if minOverTime
-  vf.data = min(vf.data,[],vf.g.dim+1);
+if strcmp(minOverTime, 'end')
+  vf.dataMin = min(vf.data, [], vf.g.dim+1);
 end
 end

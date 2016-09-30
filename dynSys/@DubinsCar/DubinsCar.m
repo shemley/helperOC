@@ -1,9 +1,4 @@
 classdef DubinsCar < DynSys
-  % Note: Since plane is a "handle class", we can pass on
-  % handles/pointers to other plane objects
-  % e.g. a.platoon.leader = b (passes b by reference, does not create a copy)
-  % Also see constructor
-  
   properties
     % Angular control bounds
     wMax
@@ -12,11 +7,14 @@ classdef DubinsCar < DynSys
     
     % Disturbance
     dMax
+    
+    % Dimensions that are active
+    dims
   end
   
   methods
-    function obj = DubinsCar(x, wMax, speed, dMax)
-      % obj = DubinsCar(x, wMax, speed, dMax)
+    function obj = DubinsCar(x, wMax, speed, dMax, dims)
+      % obj = DubinsCar(x, wMax, speed, dMax, dims)
       %
       % Constructor. Creates a plane object with a unique ID,
       % state x, and reachable set information reachInfo
@@ -24,9 +22,10 @@ classdef DubinsCar < DynSys
       % Dynamics:
       %    \dot{x}_1 = v * cos(x_3) + d1
       %    \dot{x}_2 = v * sin(x_3) + d2
-      %    \dot{x}_3 = u            + d3
+      %    \dot{x}_3 = u
       %         v \in [vrange(1), vrange(2)]
       %         u \in [-wMax, wMax]
+      %         d \in [-dMax, dMax]
       %
       % Inputs:
       %   x      - state: [xpos; ypos; theta]
@@ -35,17 +34,8 @@ classdef DubinsCar < DynSys
       %   dMax   - disturbance bounds
       %
       % Output:
-      %   obj       - a Plane object
-      %
-      % Mahesh Vashishtha, 2015-10-26
-      % Modified, Mo Chen, 2016-05-22
-      
-      % Basic vehicle properties
-      obj.pdim = 1:2; % Position dimensions
-      obj.hdim = 3;   % Heading dimensions
-      obj.nx = 3;
-      obj.nu = 1;
-      
+      %   obj       - a DubinsCar object
+     
       if numel(x) ~= obj.nx
         error('Initial state does not have right dimension!');
       end
@@ -63,8 +53,19 @@ classdef DubinsCar < DynSys
       end
       
       if nargin < 4
-        dMax = [0 0];
+        dMax = [0; 0; 0];
       end
+      
+      if nargin < 5
+        dims = 1:3;
+      end
+        
+      % Basic vehicle properties
+      obj.pdim = 1:2; % Position dimensions
+      obj.hdim = 3;   % Heading dimensions
+      obj.nx = length(dims);
+      obj.nu = 1;
+      obj.nd = 3;      
       
       obj.x = x;
       obj.xhist = obj.x;
@@ -72,6 +73,7 @@ classdef DubinsCar < DynSys
       obj.wMax = wMax;
       obj.speed = speed;
       obj.dMax = dMax;
+      obj.dims = dims;
     end
     
   end % end methods

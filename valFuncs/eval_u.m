@@ -6,7 +6,7 @@ function v = eval_u(gs, datas, xs, interp_method)
 % Inputs:
 %   Option 1: Single grid, single value function, multiple states
 %     gs    - a single grid structure
-%     datas - a single matrix (look-up stable) representing the value 
+%     datas - a single matrix (look-up stable) representing the value
 %             function
 %     xs    - set of states; each row is a state
 %
@@ -15,8 +15,8 @@ function v = eval_u(gs, datas, xs, interp_method)
 %     datas - a cell structure of matrices representing the value function
 %     xs    - a single state
 %
-%   Option 3: Multiple grids, value functions, and states. The number of 
-%             grids, value functions, and states must be equal under this 
+%   Option 3: Multiple grids, value functions, and states. The number of
+%             grids, value functions, and states must be equal under this
 %             option
 %     gs    - a cell structure of grid structures
 %     datas - a cell structure of matrices representing value functions
@@ -66,14 +66,38 @@ function v = eval_u_single(g, data, x, interp_method)
 % Mo Chen, 2015-10-15
 % Updated 2016-05-18
 
+% If the number of columns does not match the grid dimensions, try taking
+% transpose
+if size(x, 2) ~= g.dim
+  x = x';
+end
+
 %% Dealing with periodicity
 for i = 1:g.dim
   if isequal(g.bdry{i}, @addGhostPeriodic)
     % Grid points
     g.vs{i} = cat(1, g.vs{i}, g.vs{i}(end) + g.dx(i));
-
-    % Input data
-    data = eval(periodicAugmentCmd(i, g.dim));
+    
+    % Input data; eg. data = cat(:, data, data(:,:,1))
+    colons1 = repmat({':'}, 1, g.dim);
+    colons1{i} = 1;
+    cat_argin = {i; data; data(colons1{:})};
+    data = cat(cat_argin{:});
+    
+    % Map input points to within grid bounds
+    period = max(g.vs{i}) - min(g.vs{i});
+    
+    i_above_bounds = x(:,i) > max(g.vs{i});
+    while any(i_above_bounds)
+      x(i_above_bounds, i) = x(i_above_bounds, i) - period;
+      i_above_bounds = x(:,i) > max(g.vs{i});
+    end
+    
+    i_below_bounds = x(:,i) < min(g.vs{i});
+    while any(i_below_bounds)
+      x(i_below_bounds, i) = x(i_below_bounds, i) + period;
+      i_below_bounds = x(:,i) < min(g.vs{i});
+    end
   end
 end
 
@@ -81,56 +105,14 @@ end
 % Input checking
 x = checkInterpInput(g, x);
 
-switch g.dim
-  case 1
-    v = interpn(g.vs{1}, data, x, interp_method);
-    
-  case 2
-    v = interpn(g.vs{1}, g.vs{2}, data, x(:,1),x(:,2), interp_method);
-    
-  case 3
-    v = interpn(g.vs{1}, g.vs{2}, g.vs{3}, data, x(:,1),x(:,2),x(:,3), ...
-      interp_method);
-    
-  case 4
-    v = interpn(g.vs{1},g.vs{2},g.vs{3}, g.vs{4}, data, ...
-      x(:,1),x(:,2),x(:,3),x(:,4), interp_method);
-    
-  case 6
-    v = interpn(g.vs{1}, g.vs{2},g.vs{3}, g.vs{4}, g.vs{5}, g.vs{6}, ...
-      data, x(:,1), x(:,2), x(:,3), x(:,4), x(:,5), x(:,6), interp_method);
-    
-  otherwise
-    error(['Cannot evaluate matrices with dimension' num2str(g.dim) '!'])
+% eg. v = interpn(g.vs{1}, g.vs{2}, data, x(:,1), x(:,2), interp_method)
+interpn_argin_vs = cell(g.dim, 1);
+interpn_argin_x = cell(g.dim, 1);
+for i = 1:g.dim
+  interpn_argin_vs{i} = g.vs{i};
+  interpn_argin_x{i} = x(:,i);
 end
 
-end
+v = interpn(interpn_argin_vs{:}, data, interpn_argin_x{:}, interp_method);
 
-function cmd = periodicAugmentCmd(idim, dims)
-% cmd = periodicAugmentCmd(idim, dims)
-%
-% Creates the command for concatenating the first slice of data to the end of
-% the data to deal with periodic dimensions.
-%
-% eg. periodicAugmentCmd(1, 3) returns 'cat(1, data, data(1,:,:))'
-%     periodicAugmentCmd(3, 3) returns 'cat(3, data, data(:,:,1))'
-%
-% Mo Chen, 2016-02-19
-
-
-cmd = ['cat(' num2str(idim) ', data, data('];
-
-for i = 1:dims
-  if i == idim
-    cmd = [cmd '1'];
-  else
-    cmd = [cmd ':'];
-  end
-  
-  if i == dims
-    cmd = [cmd '));'];
-  else
-    cmd = [cmd ','];
-  end
-end
 end
