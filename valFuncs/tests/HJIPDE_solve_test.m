@@ -223,7 +223,7 @@ if strcmp(whatTest, 'stopInit')
   extraArgs.visualize = true;
   extraArgs.deleteLastPlot = true;
   extraArgs.plotData.plotDims = [1 1 0];
-  extraArgs.plotData.projpt = -pi;
+  extraArgs.plotData.projpt = extraArgs.stopInit(3);
   [data, tau, extraOuts] = ...
     HJIPDE_solve(data0, tau, schemeData, 'none', extraArgs);
   

@@ -86,7 +86,7 @@ extraOuts = [];
 small = 1e-4;
 g = schemeData.grid;
 gDim = g.dim;
-colons = repmat({':'}, 1, gDim);
+clns = repmat({':'}, 1, gDim);
 
 %% Extract the information from extraargs
 % Extract the information about obstacles
@@ -99,7 +99,7 @@ if isfield(extraArgs, 'obstacles')
     obstacle_i = obstacles;
   elseif numDims(obstacles) == gDim + 1
     obsMode = 'time-varying';
-    obstacle_i = obstacles(colons{:}, 1);
+    obstacle_i = obstacles(clns{:}, 1);
   else
     error('Inconsistent obstacle dimensions!')
   end
@@ -176,7 +176,12 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   need_light = true;
   
   if strcmp(obsMode, 'static')
-    visSetIm(g, obstacle_i, 'k');
+    if all(plotDims)
+      visSetIm(g, obstacle_i, 'k');
+    else
+      [gPlot, obsPlot] = proj(g, obstacle_i, ~plotDims, projpt);
+      visSetIm(gPlot, obsPlot, 'k');
+    end
   end
   
   if isfield(extraArgs, 'stopInit') 
@@ -229,11 +234,11 @@ data = zeros([data0size(1:gDim) length(tau)]);
 
 if numDims(data0) == gDim
   % New computation
-  data(colons{:}, 1) = data0;
+  data(clns{:}, 1) = data0;
   istart = 2;
 elseif numDims(data0) == gDim + 1
   % Continue an old computation
-  data(colons{:}, 1:data0size(end)) = data0;
+  data(clns{:}, 1:data0size(end)) = data0;
   
   % Start at custom starting index if specified
   if isfield(extraArgs, 'istart')
@@ -261,7 +266,7 @@ for i = istart:length(tau)
       schemeData, i, tau, data, obstacles, paramsIn);
   end
   
-  y0 = data(colons{:}, i-1);
+  y0 = data(clns{:}, i-1);
   y = y0(:);
   
   tNow = tau(i-1);
@@ -293,7 +298,7 @@ for i = istart:length(tau)
       if numDims(targets) == gDim
         y = min(y, targets(:));
       else
-        target_i = targets(colons{:}, i);
+        target_i = targets(clns{:}, i);
         y = min(y, target_i(:));
       end
     end
@@ -301,7 +306,7 @@ for i = istart:length(tau)
     % "Mask" using obstacles
     if isfield(extraArgs, 'obstacles')
       if strcmp(obsMode, 'time-varying')
-        obstacle_i = obstacles(colons{:}, i);
+        obstacle_i = obstacles(clns{:}, i);
       end
       y = max(y, -obstacle_i(:));
     end
@@ -315,15 +320,15 @@ for i = istart:length(tau)
   end
   
   % Reshape value function
-  data(colons{:}, i) = reshape(y, g.shape);
-  data_i = data(colons{:}, i);
+  data(clns{:}, i) = reshape(y, g.shape);
+  data_i = data(clns{:}, i);
   %% If commanded, stop the reachable set computation once it contains
   % the initial state.
   if isfield(extraArgs, 'stopInit')
     initValue = eval_u(g, data_i, extraArgs.stopInit);
     if ~isnan(initValue) && initValue <= 0
       extraOuts.stoptau = tau(i);
-      data(colons{:}, i+1:size(data, gDim+1)) = [];
+      data(clns{:}, i+1:size(data, gDim+1)) = [];
       tau(i+1:end) = [];
       break
     end
@@ -331,7 +336,7 @@ for i = istart:length(tau)
   
   %% Stop computation if reachable set contains a "stopSet"
   if exist('stopSet', 'var')
-    temp = data(colons{:}, i);
+    temp = data(clns{:}, i);
     dataInds = find(temp(:) <= stopLevel);
     
     if isfield(extraArgs, 'stopSetInclude')
@@ -342,7 +347,7 @@ for i = istart:length(tau)
     
     if stopSetFun(ismember(setInds, dataInds))
       extraOuts.stoptau = tau(i);
-      data(colons{:}, i+1:size(data, gDim+1)) = [];
+      data(clns{:}, i+1:size(data, gDim+1)) = [];
       tau(i+1:end) = [];
       break
     end
@@ -350,7 +355,7 @@ for i = istart:length(tau)
   
   if stopConverge && change < convergeThreshold
     extraOuts.stoptau = tau(i);
-    data(colons{:}, i+1:size(data, gDim+1)) = [];
+    data(clns{:}, i+1:size(data, gDim+1)) = [];
     tau(i+1:end) = [];
     break
   end
@@ -373,6 +378,7 @@ for i = istart:length(tau)
     % Visualize the reachable set
     figure(f)
     
+    % Delete last plot
     if deleteLastPlot 
       if isfield(extraOuts, 'hT')
         if iscell(extraOuts.hT)
@@ -389,6 +395,7 @@ for i = istart:length(tau)
       end
     end
     
+    % Project
     if projDims == 0
       gPlot = g;
       dataPlot = data_i;
