@@ -50,8 +50,6 @@ speed = 1;
 wMax = 1;
 
 %% Pack problem parameters
-schemeData.grid = g; % Grid MUST be specified!
-
 % Dynamical system parameters
 dCar = DubinsCar([0, 0, 0], wMax, speed);
 schemeData.grid = g;
@@ -94,20 +92,20 @@ end
 
 %% Test using time-varying targets
 if strcmp(whatTest, 'tvTargets')
+  % Specify targets
   targets = zeros([size(data0) length(tau)]);
   for i = 1:length(tau)
     targets(:,:,:,i) = shapeCylinder(g, 3, [1.5; 1.5; 0], i/length(tau)*R);
   end
   extraArgs.targets = targets;
   
-  numPlots = 4;
-  spC = ceil(sqrt(numPlots));
-  spR = ceil(numPlots / spC);
-  
   [data, tau, ~] = HJIPDE_solve(data0, tau, schemeData, 'none', extraArgs);
   
   % Visualize
   figure;
+  numPlots = 4;
+  spC = ceil(sqrt(numPlots));
+  spR = ceil(numPlots / spC);
   for i = 1:numPlots
     subplot(spR, spC, i)
     ind = ceil(i * length(tau) / numPlots);
