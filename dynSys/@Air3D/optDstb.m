@@ -10,7 +10,7 @@ if ~(strcmp(dMode, 'max') || strcmp(dMode, 'min'))
 end
 
 if ~iscell(y)
-  deriv = num2cell(y);
+  y = num2cell(y);
 end
 
 if ~iscell(deriv)

@@ -14,13 +14,21 @@ if all(size(vIn) ~= 2)
   error('Input vector must be 2D!')
 end
 
-rotate_matrix = [cos(theta) -sin(theta); sin(theta) cos(theta)];
-
 % Rotate matrix and preserve vector size
-if size(vIn, 1) == 2
-  vOut = rotate_matrix * vIn;
-else
-  vOut = (rotate_matrix * vIn')';
+vOut = zeros(size(vIn));
+transpose = false;
+if size(vIn, 1) ~= 2
+  vIn = vIn';
+  vOut = vOut';
+  theta = theta';
+  transpose = true;
+end
+
+vOut(1,:) = cos(theta) .* vIn(1,:) - sin(theta) .* vIn(2,:);
+vOut(2,:) = sin(theta) .* vIn(1,:) + cos(theta) .* vIn(2,:);
+
+if transpose
+  vOut = vOut';
 end
 
 end

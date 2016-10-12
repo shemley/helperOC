@@ -262,8 +262,8 @@ for i = istart:length(tau)
       paramsIn = [];
     end
     
-    schemeData = extraArgs.SDModFunc( ...
-      schemeData, i, tau, data, obstacles, paramsIn);
+    schemeData = extraArgs.SDModFunc(schemeData, i, tau, data, obstacles, ...
+      paramsIn);
   end
   
   y0 = data(clns{:}, i-1);
@@ -277,8 +277,8 @@ for i = istart:length(tau)
       yLast = y;
     end
     
-    if quiet == 0 
-    fprintf('  Computing [%f %f]...\n', tNow, tau(i))
+    if ~quiet
+      fprintf('  Computing [%f %f]...\n', tNow, tau(i))
     end
     
     [tNow, y] = feval(integratorFunc, schemeFunc, [tNow tau(i)], y, ...
@@ -314,14 +314,15 @@ for i = istart:length(tau)
   
   if stopConverge
     change = max(abs(y - y0(:)));
-    if quiet == 0
-    fprintf('Max change since last iteration: %f\n', change)
+    if ~quiet
+      fprintf('Max change since last iteration: %f\n', change)
     end
   end
   
   % Reshape value function
   data(clns{:}, i) = reshape(y, g.shape);
   data_i = data(clns{:}, i);
+  
   %% If commanded, stop the reachable set computation once it contains
   % the initial state.
   if isfield(extraArgs, 'stopInit')
