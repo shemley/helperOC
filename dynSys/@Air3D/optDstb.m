@@ -1,4 +1,4 @@
-function dOpt = optDstb(obj, t, y, deriv, dMode, ~)
+function dOpt = optDstb(obj, ~, y, deriv, dMode, ~)
 % dOpt = optDstb(obj, t, y, deriv, ~, ~)
 
 if nargin < 5
