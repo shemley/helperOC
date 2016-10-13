@@ -14,7 +14,7 @@ if nargin < 2
 end
 
 if nargin < 3
-  arrowLength = 0.1;
+  arrowLength = 1;
 end
 
 %% Get position and velocity
