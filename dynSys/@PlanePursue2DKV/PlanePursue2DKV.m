@@ -3,20 +3,20 @@ classdef PlanePursue2DKV < DynSys
   properties
     %% Plane parameters
     % Angular control bounds
-    wMax
+    wMaxA
     
     % Speed control bounds
-    vrange
+    vrangeA
     
     % Disturbance
-    dMax
+    dMaxA
     
     %% 2D Kinematic vehicle parameters
-    vMax
+    vMaxB
   end
   
   methods
-    function obj = PlanePursue2DKV(x, wMax, vrange, dMax, vMax)
+    function obj = PlanePursue2DKV(x, wMaxA, vrangeA, dMaxA, vMaxB)
       % obj = PlanePursue2DKV(x, plane, KinVeh2D)
       %
       % Constructor. Creates the dynamical system object with state x and
@@ -51,10 +51,10 @@ classdef PlanePursue2DKV < DynSys
       obj.x = x;
       obj.xhist = obj.x;
       
-      obj.wMax = wMax;
-      obj.vrange = vrange;
-      obj.dMax = dMax;
-      obj.vMax = vMax;
+      obj.wMaxA = wMaxA;
+      obj.vrangeA = vrangeA;
+      obj.dMaxA = dMaxA;
+      obj.vMaxB = vMaxB;
       
       obj.pdim = 1:2;
       obj.hdim = 3;
