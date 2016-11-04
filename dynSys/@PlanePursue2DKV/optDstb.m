@@ -14,27 +14,27 @@ if iscell(deriv)
   dOpt = cell(obj.nd, 1);
   normDeriv12 = sqrt(deriv{1}.^2 + deriv{2}.^2);
   if strcmp(dMode, 'max')
-    dOpt{1} = obj.dMax(1) * deriv{1} ./ normDeriv12;
+    dOpt{1} = obj.dMaxA(1) * deriv{1} ./ normDeriv12;
     dOpt{1}(normDeriv12==0) = 0;
-    dOpt{2} = obj.dMax(1) * deriv{2} ./ normDeriv12;
+    dOpt{2} = obj.dMaxA(1) * deriv{2} ./ normDeriv12;
     dOpt{2}(normDeriv12==0) = 0;
-    dOpt{3} = (deriv{3}>=0) * obj.dMax(2) - (deriv{3}<0) * obj.dMax(2);
+    dOpt{3} = (deriv{3}>=0) * obj.dMaxA(2) - (deriv{3}<0) * obj.dMaxA(2);
     
-    dOpt{4} = -obj.vMax * deriv{1} ./ normDeriv12;
+    dOpt{4} = -obj.vMaxB * deriv{1} ./ normDeriv12;
     dOpt{4}(normDeriv12==0) = 0;
-    dOpt{5} = -obj.vMax * deriv{2} ./ normDeriv12;
+    dOpt{5} = -obj.vMaxB * deriv{2} ./ normDeriv12;
     dOpt{5}(normDeriv12==0) = 0;
     
   elseif strcmp(dMode, 'min')
-    dOpt{1} = -obj.dMax(1) * deriv{1} ./ normDeriv12;
+    dOpt{1} = -obj.dMaxA(1) * deriv{1} ./ normDeriv12;
     dOpt{1}(normDeriv12==0) = 0;
-    dOpt{2} = -obj.dMax(1) * deriv{2} ./ normDeriv12;
+    dOpt{2} = -obj.dMaxA(1) * deriv{2} ./ normDeriv12;
     dOpt{2}(normDeriv12==0) = 0;
-    dOpt{3} = (deriv{3}>=0) * -obj.dMax(2) + (deriv{3}<0) * obj.dMax(2);
+    dOpt{3} = (deriv{3}>=0) * -obj.dMaxA(2) + (deriv{3}<0) * obj.dMaxA(2);
     
-    dOpt{4} = obj.vMax * deriv{1} ./ normDeriv12;
+    dOpt{4} = obj.vMaxB * deriv{1} ./ normDeriv12;
     dOpt{4}(normDeriv12==0) = 0;
-    dOpt{5} = obj.vMax * deriv{2} ./ normDeriv12;
+    dOpt{5} = obj.vMaxB * deriv{2} ./ normDeriv12;
     dOpt{5}(normDeriv12==0) = 0;
   else
     error('Unknown dMode!')
@@ -44,11 +44,11 @@ else
   normDeriv12 = sqrt(deriv(1).^2 + deriv(2).^2);
   if strcmp(dMode, 'max')
     if normDeriv12 > 0
-      dOpt(1) = obj.dMax(1) * deriv(1) / normDeriv12;
-      dOpt(2) = obj.dMax(1) * deriv(2) / normDeriv12;
+      dOpt(1) = obj.dMaxA(1) * deriv(1) / normDeriv12;
+      dOpt(2) = obj.dMaxA(1) * deriv(2) / normDeriv12;
       
-      dOpt(4) = -obj.vMax * deriv(1) / normDeriv12;
-      dOpt(5) = -obj.vMax * deriv(2) / normDeriv12;
+      dOpt(4) = -obj.vMaxB * deriv(1) / normDeriv12;
+      dOpt(5) = -obj.vMaxB * deriv(2) / normDeriv12;
     else
       dOpt(1) = 0;
       dOpt(2) = 0;
@@ -56,15 +56,15 @@ else
       dOpt(4) = 0;
       dOpt(5) = 0;
     end
-    dOpt(3) = (deriv(3)>=0) * obj.dMax(2) - (deriv(3)<0) * obj.dMax(2);
+    dOpt(3) = (deriv(3)>=0) * obj.dMaxA(2) - (deriv(3)<0) * obj.dMaxA(2);
     
   elseif strcmp(dMode, 'min')
     if normDeriv12 > 0
-      dOpt(1) = -obj.dMax(1) * deriv(1) / normDeriv12;
-      dOpt(2) = -obj.dMax(1) * deriv(2) / normDeriv12;
+      dOpt(1) = -obj.dMaxA(1) * deriv(1) / normDeriv12;
+      dOpt(2) = -obj.dMaxA(1) * deriv(2) / normDeriv12;
       
-      dOpt(4) = obj.vMax * deriv(1) / normDeriv12;
-      dOpt(5) = obj.vMax * deriv(2) / normDeriv12;
+      dOpt(4) = obj.vMaxB * deriv(1) / normDeriv12;
+      dOpt(5) = obj.vMaxB * deriv(2) / normDeriv12;
     else
       dOpt(1) = 0;
       dOpt(2) = 0;
@@ -72,7 +72,7 @@ else
       dOpt(4) = 0;
       dOpt(5) = 0;
     end
-    dOpt(3) = (deriv(3)>=0) * -obj.dMax(2) + (deriv(3)<0) * obj.dMax(2);
+    dOpt(3) = (deriv(3)>=0) * -obj.dMaxA(2) + (deriv(3)<0) * obj.dMaxA(2);
     
   else
     error('Unknown dMode!')
