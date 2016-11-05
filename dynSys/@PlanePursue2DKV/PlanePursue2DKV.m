@@ -16,7 +16,7 @@ classdef PlanePursue2DKV < DynSys
   end
   
   methods
-    function obj = PlanePursue2DKV(x, wMaxA, vrangeA, dMaxA, vMaxB)
+    function obj = PlanePursue2DKV(x, wMaxA, vRangeA, dMaxA, vMaxB)
       % obj = PlanePursue2DKV(x, plane, KinVeh2D)
       %
       % Constructor. Creates the dynamical system object with state x and
