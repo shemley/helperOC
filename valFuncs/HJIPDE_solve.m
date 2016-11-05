@@ -5,6 +5,9 @@ function [data, tau, extraOuts] = ...
 %     Solves HJIPDE with initial conditions data0, at times tau, and with
 %     parameters schemeData and extraArgs
 %
+% ----- How to use this function -----
+% 
+%
 % Inputs:
 %   data0      - initial value function
 %   tau        - list of computation times
