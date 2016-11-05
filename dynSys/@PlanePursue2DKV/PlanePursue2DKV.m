@@ -6,7 +6,7 @@ classdef PlanePursue2DKV < DynSys
     wMaxA
     
     % Speed control bounds
-    vrangeA
+    vRangeA
     
     % Disturbance
     dMaxA
@@ -52,7 +52,7 @@ classdef PlanePursue2DKV < DynSys
       obj.xhist = obj.x;
       
       obj.wMaxA = wMaxA;
-      obj.vrangeA = vrangeA;
+      obj.vRangeA = vRangeA;
       obj.dMaxA = dMaxA;
       obj.vMaxB = vMaxB;
       
