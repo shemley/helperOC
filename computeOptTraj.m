@@ -1,4 +1,22 @@
 function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
+% [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
+%   Computes the optimal trajectories given the optimal value function
+%   represented by (g, data), associated time stamps tau, dynamics given in
+%   dynSys.
+%
+% Inputs:
+%   g, data - grid and value function
+%   tau     - time stamp (must be the same length as size of last dimension of
+%                         data)
+%   dynSys  - dynamical system object for which the optimal path is to be
+%             computed
+%   extraArgs
+%     .uMode        - specifies whether the control u aims to minimize or
+%                     maximize the value function
+%     .visualize    - set to true to visualize results
+%     .projDim      - set the dimensions that should be projected away when
+%                     visualizing
+%     .fig_filename - specifies the file name for saving the visualizations
 
 if nargin < 5
   extraArgs = [];
@@ -7,7 +25,7 @@ end
 % Default parameters
 uMode = 'min';
 visualize = false;
-save_png = false;
+subSamples = 4;
 
 if isfield(extraArgs, 'uMode')
   uMode = extraArgs.uMode;
@@ -23,13 +41,11 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   figure
 end
 
-if isfield(extraArgs, 'save_png') && extraArgs.save_png
-  save_png = extraArgs.save_png;
-  folder = sprintf('%s_%f', mfilename, now);
-  system(sprintf('mkdir %s', folder));
+if isfield(extraArgs, 'subSamples')
+  subSamples = extraArgs.subSamples;
 end
 
-colons = repmat({':'}, 1, g.dim);
+clns = repmat({':'}, 1, g.dim);
 
 if any(diff(tau)) < 0
   error('Time stamps must be in ascending order!')
@@ -40,7 +56,6 @@ small = 1e-4;
 BRS_t = 1;
 traj_t = 1;
 tauLength = length(tau);
-subSamples = 4;
 dtSmall = (tau(2) - tau(1))/subSamples;
 
 % Initialize trajectory
@@ -50,14 +65,14 @@ traj(:,1) = dynSys.x;
 while BRS_t <= tauLength
   % Determine the earliest time that the current state is in the reachable set
   for tEarliest = tauLength:-1:BRS_t
-    valueAtX = eval_u(g, data(colons{:}, tEarliest), dynSys.x);
+    valueAtX = eval_u(g, data(clns{:}, tEarliest), dynSys.x);
     if valueAtX < small
       break
     end
   end
   
   % BRS at current time
-  BRS_at_t = data(colons{:},tEarliest);
+  BRS_at_t = data(clns{:},tEarliest);
   
   % Visualize BRS corresponding to current trajectory point
   if visualize
@@ -69,9 +84,10 @@ while BRS_t <= tauLength
     title(tStr)
     drawnow
     
-    if save_png
-      export_fig(sprintf('%s/%d', folder, traj_t), '-png')
+    if isfield(extraArgs, 'fig_filename')
+      export_fig(sprintf('%s%d', extraArgs.fig_filename, traj_t), '-png')
     end
+
     hold off
   end
   
