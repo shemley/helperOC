@@ -64,13 +64,22 @@ traj(:,1) = dynSys.x;
 
 while BRS_t <= tauLength
   % Determine the earliest time that the current state is in the reachable set
-  for tEarliest = tauLength:-1:BRS_t
+  % Binary search
+  upper = tauLength;
+  lower = BRS_t;
+  while upper > lower
+    tEarliest = ceil((upper + lower)/2);
     valueAtX = eval_u(g, data(clns{:}, tEarliest), dynSys.x);
     if valueAtX < small
-      break
+      % point is in reachable set; eliminate all lower indices
+      lower = tEarliest;
+    else
+      % too late
+      upper = tEarliest - 1;
     end
   end
-  
+  tEarliest = upper;
+    
   % BRS at current time
   BRS_at_t = data(clns{:},tEarliest);
   
