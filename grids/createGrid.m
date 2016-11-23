@@ -42,6 +42,10 @@ if ~iscolumn(grid_max)
   grid_max = grid_max';
 end
 
+if ~iscolumn(N)
+  N = N';
+end
+
 %% Create the grid
 g.dim = length(grid_min);
 g.min = grid_min;
