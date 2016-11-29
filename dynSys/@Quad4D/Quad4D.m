@@ -1,11 +1,12 @@
 classdef Quad4D < DynSys
   properties
+    dims    % Active dimensions
     uMin    % Control bounds
     uMax
   end % end properties
-
+  
   methods
-    function obj = Quad4D(x, uMin, uMax)
+    function obj = Quad4D(x, uMin, uMax, dims)
       % obj = Quad4D(x, uMin, uMax)
       %
       % Constructor. Creates a quadrotor object with a unique ID,
@@ -21,19 +22,18 @@ classdef Quad4D < DynSys
       % Inputs:   x   - state: [xpos; xvel; ypos; yvel]
       % Output:   obj - a quadrotor object
       
+      % Make sure initial state is a column vector
+      if ~iscolumn(x)
+        x = x';
+      end
+      
       if nargin < 2
         uMax = 3;
         uMin = -3;
       end
       
-      % Make sure initial state is 4D
-      if numel(x) ~= 4
-        error('Quadrotor state must be 4D.')
-      end
-
-      % Make sure initial state is a column vector
-      if ~iscolumn(x)
-        x = x';
+      if nargin < 3
+        dims = 1:4;
       end
       
       obj.x = x;
@@ -42,8 +42,17 @@ classdef Quad4D < DynSys
       obj.uMax = uMax;
       obj.uMin = uMin;
       
-      obj.pdim = [1 3];
-      obj.vdim = [2 4];
+      obj.pdim = [find(dims == 1) find(dims == 3)]; % Position dimensions
+      obj.vdim = [find(dims == 2) find(dims == 4)]; % Velocity dimensions
+      
+      obj.nu = 2;
+      obj.dims = dims;
+      obj.nx = length(dims);
+      
+      if numel(x) ~= obj.nx
+        error('Initial state does not have right dimension!');
+      end
+      
     end % end constructor
   end % end methods
 end % end class

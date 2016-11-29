@@ -1,4 +1,4 @@
-function dx = dynamics(obj, t, x, u, d, ~)
+function dx = dynamics(obj, ~, x, u, d)
 % Dynamics of the Quad4DCAvoid, two quadrotors performing collision avoidance
 %     \dot{x}_1 = x_2
 %     \dot{x}_2 = uB(1) - uA(1)
@@ -6,8 +6,8 @@ function dx = dynamics(obj, t, x, u, d, ~)
 %     \dot{x}_4 = uB(2) - uA(2)
 %       |uA(i)| <= aMax(i)
 %       |uB(i)| <= bMax(i), i = 1,2
-dx = cell(obj.nx,1);
 
+dx = cell(obj.nx,1);
 dims = obj.dims;
 
 returnVector = false;
@@ -19,7 +19,7 @@ if ~iscell(x)
 end
 
 for i = 1:length(dims)
-  dx{i} = dynamics_cell_helper(obj, x, u, d, dims, dims(i));
+  dx{i} = dynamics_cell_helper(x, u, d, dims, dims(i));
 end
 
 if returnVector
@@ -28,7 +28,7 @@ end
 end
 
 
-function dx = dynamics_cell_helper(obj, x, u, d, dims, dim)
+function dx = dynamics_cell_helper(x, u, d, dims, dim)
 
 switch dim
   case 1

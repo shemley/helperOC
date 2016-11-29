@@ -23,10 +23,6 @@ classdef Quad4DCAvoid < DynSys
       %       |uA(i)| <= aMax(i)
       %       |uB(i)| <= bMax(i), i = 1,2
       
-      if numel(x) ~= obj.nx
-        error('Initial state does not have right dimension!');
-      end
-      
       if ~iscolumn(x)
         x = x';
       end      
@@ -41,12 +37,16 @@ classdef Quad4DCAvoid < DynSys
       end
       
       obj.pdim = [find(dims == 1) find(dims == 3)]; % Position dimensions
-      obj.vdim = [find(dims == 2) find(dims == 4)];
+      obj.vdim = [find(dims == 2) find(dims == 4)]; % Velocity dimensions
 
       obj.nu = 2;
       obj.nd = 4;
       obj.dims = dims;
       obj.nx = length(dims);
+      
+      if numel(x) ~= obj.nx
+        error('Initial state does not have right dimension!');
+      end
       
       obj.x = x;
       obj.xhist = obj.x;

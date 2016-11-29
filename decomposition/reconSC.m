@@ -145,14 +145,9 @@ vf.tau = vfs.tau;
 
 if strcmp(minOverTime,'during')
   %% Expand look-up tables to fill in missing dimensions
-  %vf.data = -inf(vf.g.N');
-  %colons = repmat({':'}, 1, vf.g.dim);
-  
   for t = 1:length(vf.tau)
-    
     for i = 1:num_vfs
       colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
-      
       
       [~, data_trunc] = ...
         truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
@@ -170,6 +165,7 @@ if strcmp(minOverTime,'during')
       end
       
     end
+    
     if t>1
       vf.dataMin = min(vf.dataMin,vf.dataLast);
     end
@@ -185,7 +181,6 @@ else
   colons = repmat({':'}, 1, vf.g.dim);
   
   for t = 1:length(vf.tau)
-    
     for i = 1:num_vfs
       colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
       
@@ -226,5 +221,16 @@ end
 %% If we're just interested in min over time, min over all vf.data
 if strcmp(minOverTime, 'end')
   vf.dataMin = min(vf.data, [], vf.g.dim+1);
+elseif strcmp(minOverTime, 'full')
+  vf.dataMin = inf(size(vf.data));
+  colons = repmat({':'}, 1, vf.g.dim);
+  for i = 1:length(vf.tau)
+    if i == 1
+      vf.dataMin(colons{:}, i) = vf.data(colons{:}, 1);
+    else
+      vf.dataMin(colons{:}, i) = min(vf.dataMin(colons{:}, i-1), ...
+        vf.data(colons{:},i));
+    end
+  end
 end
 end
