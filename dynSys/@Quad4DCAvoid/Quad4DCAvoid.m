@@ -5,7 +5,7 @@ classdef Quad4DCAvoid < DynSys
     bMax
     dxMax
     dyMax
-    dims %dimensions that are active
+    dims % dimensions that are active
     
   end
   
@@ -16,24 +16,12 @@ classdef Quad4DCAvoid < DynSys
       %     bMax: x- and y-acceleration bounds for vehicle B
       %
       % Dynamics:
-      %     \dot{x}_1 = x_2 +dx
+      %     \dot{x}_1 = x_2 + dx
       %     \dot{x}_2 = uB(1) - uA(1)
-      %     \dot{x}_3 = x_4 +dy
+      %     \dot{x}_3 = x_4 + dy
       %     \dot{x}_4 = uB(2) - uA(2)
       %       |uA(i)| <= aMax(i)
       %       |uB(i)| <= bMax(i), i = 1,2
-      
-      if nargin <4
-        dims = [1 2 3 4];
-      end
-      
-      obj.pdim = [1 3];
-      obj.vdim = [2 4];
-
-      obj.nu = 2;
-      obj.nd = 4;
-      obj.dims = dims;
-      obj.nx = length(dims);
       
       if numel(x) ~= obj.nx
         error('Initial state does not have right dimension!');
@@ -41,7 +29,24 @@ classdef Quad4DCAvoid < DynSys
       
       if ~iscolumn(x)
         x = x';
+      end      
+      
+      if nargin < 4
+        dxMax = 0;
+        dyMax = 0;
       end
+      
+      if nargin < 5
+        dims = [1 2 3 4];
+      end
+      
+      obj.pdim = [find(dims == 1) find(dims == 3)]; % Position dimensions
+      obj.vdim = [find(dims == 2) find(dims == 4)];
+
+      obj.nu = 2;
+      obj.nd = 4;
+      obj.dims = dims;
+      obj.nx = length(dims);
       
       obj.x = x;
       obj.xhist = obj.x;

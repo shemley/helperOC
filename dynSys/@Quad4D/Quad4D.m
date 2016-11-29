@@ -6,7 +6,7 @@ classdef Quad4D < DynSys
 
   methods
     function obj = Quad4D(x, uMin, uMax)
-      % obj = Quad4D(x, uMax)
+      % obj = Quad4D(x, uMin, uMax)
       %
       % Constructor. Creates a quadrotor object with a unique ID,
       % state x, and reachable set information reachInfo
