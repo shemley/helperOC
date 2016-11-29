@@ -53,20 +53,20 @@ end
 
 % Time parameters
 small = 1e-4;
-BRS_t = 1;
-traj_t = 1;
+iter = 1;
 tauLength = length(tau);
 dtSmall = (tau(2) - tau(1))/subSamples;
+% maxIter = 1.25*tauLength;
 
 % Initialize trajectory
 traj = nan(3, tauLength);
 traj(:,1) = dynSys.x;
 
-while BRS_t <= tauLength
+while iter <= tauLength 
   % Determine the earliest time that the current state is in the reachable set
   % Binary search
   upper = tauLength;
-  lower = BRS_t;
+  lower = 1;
   while upper > lower
     tEarliest = ceil((upper + lower)/2);
     valueAtX = eval_u(g, data(clns{:}, tEarliest), dynSys.x);
@@ -85,16 +85,16 @@ while BRS_t <= tauLength
   
   % Visualize BRS corresponding to current trajectory point
   if visualize
-    plot(traj(showDims(1), traj_t), traj(showDims(2), traj_t), 'k.')
+    plot(traj(showDims(1), iter), traj(showDims(2), iter), 'k.')
     hold on
-    [g2D, data2D] = proj(g, BRS_at_t, hideDims, traj(hideDims,traj_t));
+    [g2D, data2D] = proj(g, BRS_at_t, hideDims, traj(hideDims,iter));
     visSetIm(g2D, data2D);
-    tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(traj_t), tau(tEarliest));
+    tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(iter), tau(tEarliest));
     title(tStr)
     drawnow
     
     if isfield(extraArgs, 'fig_filename')
-      export_fig(sprintf('%s%d', extraArgs.fig_filename, traj_t), '-png')
+      export_fig(sprintf('%s%d', extraArgs.fig_filename, iter), '-png')
     end
 
     hold off
@@ -109,17 +109,16 @@ while BRS_t <= tauLength
   Deriv = computeGradients(g, BRS_at_t);
   for j = 1:subSamples
     deriv = eval_u(g, Deriv, dynSys.x);
-    u = dynSys.optCtrl(tau(BRS_t), dynSys.x, deriv, uMode);
+    u = dynSys.optCtrl(tau(tEarliest), dynSys.x, deriv, uMode);
     dynSys.updateState(u, dtSmall, dynSys.x);
   end
   
   % Record new point on nominal trajectory
-  traj_t = traj_t + 1;
-  traj(:,traj_t) = dynSys.x;
-  BRS_t = tEarliest + 1;
+  iter = iter + 1;
+  traj(:,iter) = dynSys.x;
 end
 
 % Delete unused indices
-traj(:,traj_t:end) = [];
-traj_tau = tau(1:traj_t-1);
+traj(:,iter:end) = [];
+traj_tau = tau(1:iter-1);
 end
