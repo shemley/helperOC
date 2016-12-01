@@ -14,13 +14,16 @@ if nargin < 2
 end
 
 if nargin < 3
-  arrowLength = 1;
+  arrowLength = 10;
 end
 
 %% Get position and velocity
 [p, phist] = obj.getPosition;
 v = obj.getVelocity;
-v = v/norm(v);
+small = 1e-2;
+if norm(v) > small
+  v = v/norm(v);
+end
 
 %% Plot position trajectory
 if isempty(obj.hpxpyhist) || ~isvalid(obj.hpxpyhist)
@@ -42,9 +45,12 @@ if isempty(obj.hpxpy) || ~isvalid(obj.hpxpy)
     'on', 'AutoScaleFactor', arrowLength);
   hold on
   
+  obj.hpxpy.Marker = '.';
   obj.hpxpy.Color = obj.hpxpyhist.Color;
   obj.hpxpy.MarkerFaceColor = obj.hpxpyhist.Color;
-  obj.hpxpy.MarkerSize = 6;
+  obj.hpxpy.MarkerSize = 20;
+  obj.hpxpy.MaxHeadSize = 1;
+  obj.hpxpy.LineWidth = 1.5;
 else
   % Otherwise, simply update graphics handles
   obj.hpxpy.XData = p(1);
