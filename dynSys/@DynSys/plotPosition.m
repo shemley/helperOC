@@ -16,11 +16,15 @@ MarkerSize = 20;
 arrowLength = 10;
 
 if isfield(extraArgs, 'Color')
-  Color = extraArgs.color;
+  Color = extraArgs.Color;
 end
 
 if isfield(extraArgs, 'MarkerSize')
   MarkerSize = extraArgs.MarkerSize;
+end
+
+if isfield(extraArgs, 'arrowLength')
+  arrowLength = extraArgs.arrowLength;
 end
 
 
