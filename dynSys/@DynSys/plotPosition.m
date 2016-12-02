@@ -1,21 +1,28 @@
-function plotPosition(obj, color, arrowLength)
+function plotPosition(obj, extraArgs)
 % function plotPosition(obj, color)
 %
 % Plots the current state and the trajectory of the quadrotor
 %
-% Inputs: obj   - vehicle object
-%         color - color for plotting
-%
-% Mo Chen, 2015-06-21
-% Modified: Mo Chen, 2015-10-20
+% Inputs: obj       - vehicle object
+%         extraArgs - color for plotting
 
 if nargin < 2
-  color = 'k';
+  extraArgs = [];
 end
 
-if nargin < 3
-  arrowLength = 10;
+%% Default parameters
+Color = 'k';
+MarkerSize = 20;
+arrowLength = 10;
+
+if isfield(extraArgs, 'Color')
+  Color = extraArgs.color;
 end
+
+if isfield(extraArgs, 'MarkerSize')
+  MarkerSize = extraArgs.MarkerSize;
+end
+
 
 %% Get position and velocity
 [p, phist] = obj.getPosition;
@@ -28,7 +35,7 @@ end
 %% Plot position trajectory
 if isempty(obj.hpxpyhist) || ~isvalid(obj.hpxpyhist)
   % If no graphics handle has been created, create it.
-  obj.hpxpyhist = plot(phist(1,:), phist(2,:), '.', 'color', color, ...
+  obj.hpxpyhist = plot(phist(1,:), phist(2,:), '.', 'color', Color, ...
     'markersize', 1);
   hold on
 else
@@ -48,7 +55,7 @@ if isempty(obj.hpxpy) || ~isvalid(obj.hpxpy)
   obj.hpxpy.Marker = '.';
   obj.hpxpy.Color = obj.hpxpyhist.Color;
   obj.hpxpy.MarkerFaceColor = obj.hpxpyhist.Color;
-  obj.hpxpy.MarkerSize = 20;
+  obj.hpxpy.MarkerSize = MarkerSize;
   obj.hpxpy.MaxHeadSize = 1;
   obj.hpxpy.LineWidth = 1.5;
 else

@@ -7,7 +7,9 @@ function dataOut = addCRadius(gIn, dataIn, radius)
 schemeData.dynSys = KinVehicleND(zeros(gIn.dim, 1), 1);
 schemeData.grid = gIn;
 
-dataOut = HJIPDE_solve(dataIn, [0 radius], schemeData, 'zero');
+extraArgs.quiet = true;
+
+dataOut = HJIPDE_solve(dataIn, [0 radius], schemeData, 'zero', extraArgs);
 
 % Discard initial set from output
 colons = repmat({':'}, 1, gIn.dim);
