@@ -17,6 +17,8 @@ function [data, tau, extraOuts] = ...
 %     .obstacles:  a single obstacle or a list of obstacles with time
 %                  stamps tau (obstacles must have same time stamp as the
 %                  solution)
+%     .keepLast:  Only keep data from latest time stamp and delete previous
+%                 datas
 %     .compRegion: unused for now (meant to limit computation region)
 %     .visualize:  set to true to visualize reachable set
 %     .plotData:   information required to plot the data (need to fill in)
@@ -230,7 +232,12 @@ startTime = cputime;
 
 %% Initialize PDE solution
 data0size = size(data0);
-data = zeros([data0size(1:gDim) length(tau)]);
+
+if isfield(extraArgs,'keepLast')
+  data = zeros(data0size(1:gDim));
+else
+  data = zeros([data0size(1:gDim) length(tau)]);
+end
 
 if numDims(data0) == gDim
   % New computation
@@ -266,7 +273,11 @@ for i = istart:length(tau)
       paramsIn);
   end
   
-  y0 = data(clns{:}, i-1);
+  if isfield(extraArgs, 'keepLast')
+    y0 = data(clns{:});
+  else
+    y0 = data(clns{:}, i-1);
+  end
   y = y0(:);
   
   tNow = tau(i-1);
@@ -320,8 +331,14 @@ for i = istart:length(tau)
   end
   
   % Reshape value function
-  data(clns{:}, i) = reshape(y, g.shape);
-  data_i = data(clns{:}, i);
+  if isfield(extraArgs, 'keepLast') 
+    %if you want to delete all but the last timestamp of data, use this
+    data(clns{:}) = reshape(y,g.shape);
+    data_i = data(clns{:});
+  else
+    data(clns{:}, i) = reshape(y, g.shape);
+    data_i = data(clns{:}, i);
+  end
   
   %% If commanded, stop the reachable set computation once it contains
   % the initial state.
