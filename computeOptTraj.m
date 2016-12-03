@@ -1,4 +1,22 @@
 function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
+% [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
+%   Computes the optimal trajectories given the optimal value function
+%   represented by (g, data), associated time stamps tau, dynamics given in
+%   dynSys.
+%
+% Inputs:
+%   g, data - grid and value function
+%   tau     - time stamp (must be the same length as size of last dimension of
+%                         data)
+%   dynSys  - dynamical system object for which the optimal path is to be
+%             computed
+%   extraArgs
+%     .uMode        - specifies whether the control u aims to minimize or
+%                     maximize the value function
+%     .visualize    - set to true to visualize results
+%     .projDim      - set the dimensions that should be projected away when
+%                     visualizing
+%     .fig_filename - specifies the file name for saving the visualizations
 
 if nargin < 5
   extraArgs = [];
@@ -7,7 +25,7 @@ end
 % Default parameters
 uMode = 'min';
 visualize = false;
-save_png = false;
+subSamples = 4;
 
 if isfield(extraArgs, 'uMode')
   uMode = extraArgs.uMode;
@@ -23,13 +41,11 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   figure
 end
 
-if isfield(extraArgs, 'save_png') && extraArgs.save_png
-  save_png = extraArgs.save_png;
-  folder = sprintf('%s_%f', mfilename, now);
-  system(sprintf('mkdir %s', folder));
+if isfield(extraArgs, 'subSamples')
+  subSamples = extraArgs.subSamples;
 end
 
-colons = repmat({':'}, 1, g.dim);
+clns = repmat({':'}, 1, g.dim);
 
 if any(diff(tau)) < 0
   error('Time stamps must be in ascending order!')
@@ -37,41 +53,51 @@ end
 
 % Time parameters
 small = 1e-4;
-BRS_t = 1;
-traj_t = 1;
+iter = 1;
 tauLength = length(tau);
-subSamples = 4;
 dtSmall = (tau(2) - tau(1))/subSamples;
+% maxIter = 1.25*tauLength;
 
 % Initialize trajectory
 traj = nan(3, tauLength);
 traj(:,1) = dynSys.x;
+tEarliest = 1;
 
-while BRS_t <= tauLength
+while iter <= tauLength 
   % Determine the earliest time that the current state is in the reachable set
-  for tEarliest = tauLength:-1:BRS_t
-    valueAtX = eval_u(g, data(colons{:}, tEarliest), dynSys.x);
+  % Binary search
+  upper = tauLength;
+  lower = tEarliest;
+  while upper > lower
+    tEarliest = ceil((upper + lower)/2);
+    valueAtX = eval_u(g, data(clns{:}, tEarliest), dynSys.x);
     if valueAtX < small
-      break
+      % point is in reachable set; eliminate all lower indices
+      lower = tEarliest;
+    else
+      % too late
+      upper = tEarliest - 1;
     end
   end
-  
+  tEarliest = upper;
+    
   % BRS at current time
-  BRS_at_t = data(colons{:},tEarliest);
+  BRS_at_t = data(clns{:}, tEarliest);
   
   % Visualize BRS corresponding to current trajectory point
   if visualize
-    plot(traj(showDims(1), traj_t), traj(showDims(2), traj_t), 'k.')
+    plot(traj(showDims(1), iter), traj(showDims(2), iter), 'k.')
     hold on
-    [g2D, data2D] = proj(g, BRS_at_t, hideDims, traj(hideDims,traj_t));
+    [g2D, data2D] = proj(g, BRS_at_t, hideDims, traj(hideDims,iter));
     visSetIm(g2D, data2D);
-    tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(traj_t), tau(tEarliest));
+    tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(iter), tau(tEarliest));
     title(tStr)
     drawnow
     
-    if save_png
-      export_fig(sprintf('%s/%d', folder, traj_t), '-png')
+    if isfield(extraArgs, 'fig_filename')
+      export_fig(sprintf('%s%d', extraArgs.fig_filename, iter), '-png')
     end
+
     hold off
   end
   
@@ -84,17 +110,16 @@ while BRS_t <= tauLength
   Deriv = computeGradients(g, BRS_at_t);
   for j = 1:subSamples
     deriv = eval_u(g, Deriv, dynSys.x);
-    u = dynSys.optCtrl(tau(BRS_t), dynSys.x, deriv, uMode);
+    u = dynSys.optCtrl(tau(tEarliest), dynSys.x, deriv, uMode);
     dynSys.updateState(u, dtSmall, dynSys.x);
   end
   
   % Record new point on nominal trajectory
-  traj_t = traj_t + 1;
-  traj(:,traj_t) = dynSys.x;
-  BRS_t = tEarliest + 1;
+  iter = iter + 1;
+  traj(:,iter) = dynSys.x;
 end
 
 % Delete unused indices
-traj(:,traj_t:end) = [];
-traj_tau = tau(1:traj_t-1);
+traj(:,iter:end) = [];
+traj_tau = tau(1:iter-1);
 end

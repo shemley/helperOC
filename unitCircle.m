@@ -15,6 +15,7 @@ V = sqrt(x.^2 + y.^2) - 1;
 f = figure;
 s = surf(x,y,V);
 s.FaceAlpha = 0.5;
+s.LineStyle = 'none';
 hold on
 
 %% Plot unit circle
@@ -30,6 +31,6 @@ p.LineWidth = 3;
 xlabel('x')
 ylabel('y')
 
-savefig(f, sprintf('%s.fig', mfilename), 'compact')
-export_fig(sprintf('%s', mfilename), '-pdf', '-transparent')
+% savefig(f, sprintf('%s.fig', mfilename), 'compact')
+% export_fig(sprintf('%s', mfilename), '-pdf', '-transparent')
 end

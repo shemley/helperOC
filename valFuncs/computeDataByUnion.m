@@ -64,10 +64,10 @@ end
 % Take the union of base reachable sets that are shifted and rotated
 data = inf(g.shape);
 for i = 1:length(near_and_in)
-  if ~isempty(adim)
-    data_rot = rotateData(base_g, base_data, thetas(i), pdims, adim);
-  else
+  if isempty(adim)
     data_rot = base_data;
+  else
+    data_rot = rotateData(base_g, base_data, thetas(i), pdims, adim);
   end
   
   data_rot_shift = shiftData(base_g, data_rot, shifts(i,:), pdims);

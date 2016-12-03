@@ -22,6 +22,9 @@ function vf = reconSC(vfs, range_lower, range_upper, minOverTime, constrType)
 %                 'end' - minovertime at the end (saves both dataMin and
 %                         all data over time)
 %                 'during' - minovertime during (saves only dataMin)
+%                 'full'   - computes reachable tube over time
+%                 'TTR'    - Computes TTR
+%
 %  constrType - options
 %     'max' - takes maximum over subsystem value functions (default)
 %     'min' - takes minimum over subsystem value functions
@@ -84,6 +87,7 @@ gs_trunc = cell(num_vfs, 1);
 rl = cell(num_vfs, 1);
 ru = cell(num_vfs, 1);
 small = 1e-3;
+big = 1e6;
 
 minN = 3; % Minimum number of grid points
 for i = 1:num_vfs
@@ -143,16 +147,13 @@ vf.g = createGrid(grid_min, grid_max, N);
 %% Time stamps
 vf.tau = vfs.tau;
 
-if strcmp(minOverTime,'during')
+if strcmp(minOverTime,'during') || strcmp(minOverTime,'TTR')
+  vf.TTR = big*ones(vf.g.N');
+
   %% Expand look-up tables to fill in missing dimensions
-  %vf.data = -inf(vf.g.N');
-  %colons = repmat({':'}, 1, vf.g.dim);
-  
   for t = 1:length(vf.tau)
-    
     for i = 1:num_vfs
       colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
-      
       
       [~, data_trunc] = ...
         truncateGrid(vfs.gs{i}, vfs.datas{i}(colonsi{:}, t), rl{i}, ru{i});
@@ -170,10 +171,20 @@ if strcmp(minOverTime,'during')
       end
       
     end
+    
     if t>1
-      vf.dataMin = min(vf.dataMin,vf.dataLast);
+      vf.dataMin = min(vf.dataMin, vf.dataLast);
     end
     vf.dataLast = vf.dataMin;
+    
+    if strcmp(minOverTime,'TTR')
+      taui = vf.tau(t);
+      if t == 1
+        vf.TTR(vf.dataMin <= 0) = taui;
+      else
+        vf.TTR(vf.dataMin <= 0) = min(vf.TTR(vf.dataMin <= 0), taui);
+      end
+    end
   end
 else
   %% Expand look-up tables to fill in missing dimensions
@@ -185,7 +196,6 @@ else
   colons = repmat({':'}, 1, vf.g.dim);
   
   for t = 1:length(vf.tau)
-    
     for i = 1:num_vfs
       colonsi = repmat({':'}, 1, vfs.gs{i}.dim);
       
@@ -226,5 +236,16 @@ end
 %% If we're just interested in min over time, min over all vf.data
 if strcmp(minOverTime, 'end')
   vf.dataMin = min(vf.data, [], vf.g.dim+1);
+elseif strcmp(minOverTime, 'full')
+  vf.dataMin = inf(size(vf.data));
+  colons = repmat({':'}, 1, vf.g.dim);
+  for i = 1:length(vf.tau)
+    if i == 1
+      vf.dataMin(colons{:}, i) = vf.data(colons{:}, 1);
+    else
+      vf.dataMin(colons{:}, i) = min(vf.dataMin(colons{:}, i-1), ...
+        vf.data(colons{:},i));
+    end
+  end
 end
 end

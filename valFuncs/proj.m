@@ -134,7 +134,7 @@ if nargout < 2
   return
 end
 
-% 'min' or 'max'
+%% 'min' or 'max'
 if ischar(xs)
   dimsToProj = find(dims);
   
@@ -152,74 +152,27 @@ if ischar(xs)
   return
 end
 
-% Take a slice
-temp = eval(getCmdStr_projData(g.dim, dims));
-dataOut = squeeze(temp);
-dataOut = eval(getCmdStr_matchGrid(g.dim, dims));
-end
+%% Take a slice
+% Preprocess periodic dimensions
+[g, data] = augmentPeriodicData(g, data);
 
-function cmdStr = getCmdStr_projData(totalDim, dims)
-% For example, if totalDim = 4, dims = [0 1 0 1], returns the string
-% interpn(g.vs{1}, g.vs{2}, g.vs{3}, g.vs{4}, data, g.vs{1}, xs(1), ...
+% temp = interpn(g.vs{1}, g.vs{2}, g.vs{3}, g.vs{4}, data, g.vs{1}, xs(1), ...
 %   g.vs{3}, xs(2));
-
-cmdStr = 'interpn(';
-% interpn(
-
-for i = 1:totalDim
-  cmdStr = cat(2, cmdStr, ['g.vs{' num2str(i) '}, ']);
-end
-% interpn(g.vs{1}, g.vs{2}, g.vs{3}, g.vs{4},
-
-cmdStr = cat(2, cmdStr, 'data, ');
-% interpn(g.vs{1}, g.vs{2}, g.vs{3}, g.vs{4}, data,
-
-xsDim = 1;
-for i = 1:totalDim
+eval_pt = cell(g.dim, 1);
+xsi = 1;
+for i = 1:g.dim
   if dims(i)
-    cmdStr = cat(2, cmdStr, ['xs(' num2str(xsDim) ')']);
-    xsDim = xsDim + 1;
+    eval_pt{i} = xs(xsi);
+    xsi = xsi + 1;
   else
-    cmdStr = cat(2, cmdStr, ['g.vs{' num2str(i) '}']);
+    eval_pt{i} = g.vs{i};
   end
   
-  if i < totalDim
-    cmdStr = cat(2, cmdStr, ', ');
-  else
-    cmdStr = cat(2, cmdStr, ')');
-  end
 end
-% interpn(g.vs{1}, g.vs{2}, g.vs{3}, g.vs{4}, data, g.vs{1}, xs(1), ...
-%   g.vs{3}, xs(2));
+temp = interpn(g.vs{:}, data, eval_pt{:});
 
-end
+dataOut = squeeze(temp);
 
-function cmdStr = getCmdStr_matchGrid(totalDim, dims)
-% For example, if totalDim = 3 and dims = [0 1 0], returns the string
-%   interpn(g.vs{1}, g.vs{3}, dataOut, gOut.xs{1}, gOut.xs{2})
-
-cmdStr = 'interpn(';
-% interpn(
-
-for i = 1:totalDim
-  if ~dims(i)
-    cmdStr = cat(2, cmdStr, ['g.vs{' num2str(i) '}, ']);
-  end
-end
-% interpn(g.vs{1}, g.vs{3},
-
-cmdStr = cat(2, cmdStr, 'dataOut, ');
-% interpn(g.vs{1}, g.vs{3}, dataOut,
-
-for i = 1:nnz(~dims)
-  cmdStr = cat(2, cmdStr, ['gOut.xs{' num2str(i) '}']);
-  
-  if i < nnz(~dims)
-    cmdStr = cat(2, cmdStr, ', ');
-  else
-    cmdStr = cat(2, cmdStr, ')');
-  end
-end
 % interpn(g.vs{1}, g.vs{3}, dataOut, gOut.xs{1}, gOut.xs{2})
-
+dataOut = interpn(g.vs{~dims}, dataOut, gOut.xs{:}); 
 end

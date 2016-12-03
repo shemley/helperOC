@@ -1,10 +1,12 @@
 function [data, tau, extraOuts] = ...
-  HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs,quiet)
+  HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
 % [data, tau, extraOuts] = ...
 %   HJIPDE_solve(data0, tau, schemeData, minWith, extraargs)
 %     Solves HJIPDE with initial conditions data0, at times tau, and with
 %     parameters schemeData and extraArgs
 %
+% ----- How to use this function -----
+% 
 % Inputs:
 %   data0      - initial value function
 %   tau        - list of computation times
@@ -80,17 +82,19 @@ if nargin < 5
   extraArgs = [];
 end
 
-if nargin < 6
-  quiet = 0;
-end
-
 extraOuts = [];
+quiet = false;
 small = 1e-4;
 g = schemeData.grid;
 gDim = g.dim;
 clns = repmat({':'}, 1, gDim);
 
 %% Extract the information from extraargs
+% Quiet mode
+if isfield(extraArgs, 'quiet') && extraArgs.quiet
+  quiet = true;
+end
+
 % Extract the information about obstacles
 obsMode = 'none';
 if isfield(extraArgs, 'obstacles')
@@ -258,7 +262,7 @@ else
 end
 
 for i = istart:length(tau)
-  if quiet == 0
+  if ~quiet
     fprintf('tau(i) = %f\n', tau(i))
   end
   %% Variable schemeData
