@@ -32,7 +32,7 @@ classdef Quad4D < DynSys
         uMin = -3;
       end
       
-      if nargin < 3
+      if nargin < 4
         dims = 1:4;
       end
       

@@ -36,6 +36,7 @@ function vf = reconSC(vfs, range_lower, range_upper, minOverTime, constrType)
 %             .g
 %             .data
 %             .tau
+%             .TTR (time-to-reach function)
 
 %% Input checking
 % Grids and corresponding value functions

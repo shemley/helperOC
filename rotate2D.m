@@ -20,8 +20,11 @@ transpose = false;
 if size(vIn, 1) ~= 2
   vIn = vIn';
   vOut = vOut';
-  theta = theta';
   transpose = true;
+end
+
+if iscolumn(theta)
+  theta = theta';
 end
 
 vOut(1,:) = cos(theta) .* vIn(1,:) - sin(theta) .* vIn(2,:);
