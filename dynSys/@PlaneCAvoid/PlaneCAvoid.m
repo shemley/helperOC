@@ -27,7 +27,7 @@ classdef PlaneCAvoid < DynSys
       %         norm((d1, d2)) <= dMax(1)
       %         abs(d3) <= dMax(2)
       %
-      % Dynamics relative to Plane A:
+      % Dynamics relative to Plane A (evader in air3D.m):
       %     \dot{x}_1 = -vA + vB*cos(x_3) + wA*x_2 + d1
       %     \dot{x}_2 = vB*sin(x_3) - wA*x_1 + d2
       %     \dot{x}_3 = wB - wA + d3
@@ -35,30 +35,56 @@ classdef PlaneCAvoid < DynSys
       %         wA in [-wMaxA, wMaxA], wB in [-wMaxB, wMaxB]
       %         norm(d1, d2) <= dMaxA(1) + dMaxB(1)
       %         abs(d3) <= dMaxA(2) + dMaxB(2)
-      % 
+      %
       % Inputs:
       %   x                - state: [xpos; ypos; theta]
+      %                    - Alternatively, x can be a cell of two Plane
+      %                      objects. The first Plane object is Plane A
       %   wMaxA, wMaxB     - maximum turn rate of vehicle A and vehicle B
       %   vRangeA, vRangeB - speed ranges
       %   dMaxA, dMaxB     - disturbance bounds
       
-      if numel(x) ~= 3
-        error('Initial state does not have right dimension!');
+      
+      if iscell(x)
+        if length(x) ~= 2
+          error('There must be two Plane objects!')
+        end
+        
+        for i = 1:length(x)
+          if ~isa(x{i}, 'Plane')
+            error('Cell inputs must be Plane objects!')
+          end
+        end
+        
+        obj.x = [0;0;0];
+        obj.xhist = obj.x;
+        
+        obj.wMaxA = x{1}.wMax;
+        obj.wMaxB = x{2}.wMax;
+        obj.vRangeA = x{1}.vrange;
+        obj.vRangeB = x{2}.vrange;
+        obj.dMaxA = x{1}.dMax;
+        obj.dMaxB = x{2}.dMax;
+        
+      else
+        if numel(x) ~= 3
+          error('Initial state does not have right dimension!');
+        end
+        
+        if ~iscolumn(x)
+          x = x';
+        end
+        
+        obj.x = x;
+        obj.xhist = obj.x;
+        
+        obj.wMaxA = wMaxA;
+        obj.wMaxB = wMaxB;
+        obj.vRangeA = vRangeA;
+        obj.vRangeB = vRangeB;
+        obj.dMaxA = dMaxA;
+        obj.dMaxB = dMaxB;
       end
-      
-      if ~iscolumn(x)
-        x = x';
-      end
-      
-      obj.x = x;
-      obj.xhist = obj.x;
-      
-      obj.wMaxA = wMaxA;
-      obj.wMaxB = wMaxB;
-      obj.vRangeA = vRangeA;
-      obj.vRangeB = vRangeB;
-      obj.dMaxA = dMaxA;
-      obj.dMaxB = dMaxB;
       
       obj.pdim = 1:2;
       obj.hdim = 3;

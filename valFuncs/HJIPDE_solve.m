@@ -23,6 +23,7 @@ function [data, tau, extraOuts] = ...
 %                 datas
 %     .compRegion: unused for now (meant to limit computation region)
 %     .visualize:  set to true to visualize reachable set
+%     .RS_level:  level set of reachable set to visualize (defaults to 0)
 %     .plotData:   information required to plot the data (need to fill in)
 %     .deleteLastPlot:
 %         set to true to delete previous plot before displaying next one
@@ -154,6 +155,11 @@ end
 
 %% Visualization
 if isfield(extraArgs, 'visualize') && extraArgs.visualize
+  RS_level = 0;
+  if isfield(extraArgs, 'RS_level')
+    RS_level = extraArgs.RS_level;
+  end
+  
   % Extract the information about plotData
   plotDims = ones(gDim, 1);
   projpt = [];  
@@ -433,7 +439,7 @@ for i = istart:length(tau)
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, gPlot.dim, false);
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', RS_level, gPlot.dim, false);
     
     if strcmp(obsMode, 'time-varying')
       extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
