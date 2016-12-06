@@ -24,6 +24,8 @@ classdef PlaneCAvoid < DynSys
       %    \dot{x}_3 = u            + d3
       %         v \in [vrange(1), vrange(2)]
       %         u \in [-wMax, wMax]
+      %         norm((d1, d2)) <= dMax(1)
+      %         abs(d3) <= dMax(2)
       %
       % Dynamics relative to Plane A:
       %     \dot{x}_1 = -vA + vB*cos(x_3) + wA*x_2 + d1
