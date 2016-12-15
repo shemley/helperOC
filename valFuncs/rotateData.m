@@ -34,8 +34,12 @@ if g.dim == 2
   dataOut(isnan(dataOut)) = max(dataOut);
   dataOut = reshape(dataOut, g.shape);
 else
-  dataOut = ...
-    eval_u(g, dataIn, [rxs{1}(:) rxs{2}(:) rxs{3}(:)], interp_method);
+  rxsVec = [];
+  for i = 1:g.dim
+    rxsVec = [rxsVec rxs{i}(:)];
+  end
+  
+  dataOut = eval_u(g, dataIn, rxsVec, interp_method);
   dataOut(isnan(dataOut)) = max(dataOut);
   dataOut = reshape(dataOut, g.shape);
 end
