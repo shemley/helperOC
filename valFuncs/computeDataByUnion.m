@@ -71,6 +71,7 @@ for i = 1:length(near_and_in)
   end
   
   data_rot_shift = shiftData(base_g, data_rot, shifts(i,:), pdims);
-  data = min(data, data_rot_shift);
+  data_rot_shift_migrated = migrateGrid(base_g, data_rot_shift, g);
+  data = min(data, data_rot_shift_migrated);
 end
 end
