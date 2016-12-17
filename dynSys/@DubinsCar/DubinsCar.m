@@ -15,14 +15,12 @@ classdef DubinsCar < DynSys
   methods
     function obj = DubinsCar(x, wMax, speed, dMax, dims)
       % obj = DubinsCar(x, wMax, speed, dMax, dims)
-      %
-      % Constructor. Creates a plane object with a unique ID,
-      % state x, and reachable set information reachInfo
+      %     Dubins Car class
       %
       % Dynamics:
       %    \dot{x}_1 = v * cos(x_3) + d1
       %    \dot{x}_2 = v * sin(x_3) + d2
-      %    \dot{x}_3 = u
+      %    \dot{x}_3 = u            + d3
       %         v \in [vrange(1), vrange(2)]
       %         u \in [-wMax, wMax]
       %         d \in [-dMax, dMax]

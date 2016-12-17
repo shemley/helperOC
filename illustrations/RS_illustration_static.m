@@ -1,4 +1,4 @@
-function RS_illustration()
+function RS_illustration_static()
 % unitCircle()
 %
 % Plots an implicit surface function for the unit disk
