@@ -14,6 +14,8 @@ end
 Color = 'k';
 MarkerSize = 20;
 arrowLength = 10;
+LineStyle = 'none';
+LineWidth = 0.5;
 
 if isfield(extraArgs, 'Color')
   Color = extraArgs.Color;
@@ -27,6 +29,13 @@ if isfield(extraArgs, 'arrowLength')
   arrowLength = extraArgs.arrowLength;
 end
 
+if isfield(extraArgs, 'LineStyle')
+  LineStyle = extraArgs.LineStyle;
+end
+
+if isfield(extraArgs, 'LineWidth')
+  LineWidth = extraArgs.LineWidth;
+end
 
 %% Get position and velocity
 [p, phist] = obj.getPosition;
@@ -40,7 +49,7 @@ end
 if isempty(obj.hpxpyhist) || ~isvalid(obj.hpxpyhist)
   % If no graphics handle has been created, create it.
   obj.hpxpyhist = plot(phist(1,:), phist(2,:), '.', 'color', Color, ...
-    'markersize', 1);
+    'markersize', 1, 'LineStyle', LineStyle, 'LineWidth', LineWidth);
   hold on
 else
   % Otherwise, simply update the graphics handles
