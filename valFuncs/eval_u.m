@@ -76,7 +76,7 @@ end
 
 %% Dealing with periodicity
 for i = 1:g.dim
-  if isequal(g.bdry{i}, @addGhostPeriodic)
+  if isfield(g, 'bdry') && isequal(g.bdry{i}, @addGhostPeriodic)
     % Map input points to within grid bounds
     period = max(g.vs{i}) - min(g.vs{i});
     

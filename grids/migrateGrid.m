@@ -35,6 +35,16 @@ function dataNew = migrateGridSingle(gOld, dataOld, gNew)
 %
 % Mo Chen, 2015-08-27
 
+gNew_xsVec = zeros(prod(gNew.N), gOld.dim);
+for i = 1:gOld.dim
+  gNew_xsVec(:,i) = gNew.xs{i}(:);
+end
+
+dataNew = eval_u(gOld, dataOld, gNew_xsVec);
+dataNew = reshape(dataNew, gNew.N');
+dataNew(isnan(dataNew)) = max(dataNew(:));
+
+return
 % Gather indices of new grid vectors that are within the bounds of the old
 % grid
 vinds = cell(gOld.dim,1);
@@ -50,33 +60,7 @@ else
   dataNew = dataMax * ones(gNew.N, 1);
 end
 
-% Interpolate to obtain new data from old data in the range of axis values
-% that are within the bounds of the old grid
-switch gOld.dim
-  case 1
-    dataNew(vinds{1}) = ...
-      interpn(gOld.vs{1}, dataOld, ...
-      gNew.xs{1}(vinds{1}) );
-  case 2
-    dataNew(vinds{1}, vinds{2}) = ...
-      interpn(gOld.vs{1}, gOld.vs{2}, dataOld, ...
-      gNew.xs{1}(vinds{1}, vinds{2}), ...
-      gNew.xs{2}(vinds{1}, vinds{2}) );
-  case 3
-    dataNew(vinds{1}, vinds{2}, vinds{3}) = ...
-      interpn(gOld.vs{1}, gOld.vs{2}, gOld.vs{3}, dataOld, ...
-      gNew.xs{1}(vinds{1}, vinds{2}, vinds{3}), ...
-      gNew.xs{2}(vinds{1}, vinds{2}, vinds{3}), ...
-      gNew.xs{3}(vinds{1}, vinds{2}, vinds{3}));
-  case 4
-    dataNew(vinds{1}, vinds{2}, vinds{3}, vinds{4}) = ...
-      interpn(gOld.vs{1}, gOld.vs{2}, gOld.vs{3}, gOld.vs{4}, dataOld, ...
-      gNew.xs{1}(vinds{1}, vinds{2}, vinds{3}, vinds{4}), ...
-      gNew.xs{2}(vinds{1}, vinds{2}, vinds{3}, vinds{4}), ...
-      gNew.xs{3}(vinds{1}, vinds{2}, vinds{3}, vinds{4}), ...
-      gNew.xs{4}(vinds{1}, vinds{2}, vinds{3}, vinds{4}) );
-  otherwise
-    error('migrateGrid has only been implemented up to 4 dimensions!')
-end
+
+dataNew = eval_u(gOld, dataOld, gNew_xsVec);
 
 end
