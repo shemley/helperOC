@@ -204,6 +204,8 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
       plot3(projectedInit(1), projectedInit(2), projectedInit(3), 'b*')
     end
   end
+  
+  grid on
 end
 
 % Extract cdynamical system if needed
