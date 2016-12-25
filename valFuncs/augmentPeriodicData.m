@@ -2,7 +2,7 @@ function [g, data] = augmentPeriodicData(g, data)
 
 %% Dealing with periodicity
 for i = 1:g.dim
-  if isequal(g.bdry{i}, @addGhostPeriodic)
+  if isfield(g, 'bdry') && isequal(g.bdry{i}, @addGhostPeriodic)
     % Grid points
     g.vs{i} = cat(1, g.vs{i}, g.vs{i}(end) + g.dx(i));
     

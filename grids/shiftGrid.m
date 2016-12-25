@@ -24,6 +24,7 @@ gShift.xs = cell(gShift.dim, 1);
 gShift.vs = cell(gShift.dim, 1);
 gShift.min = zeros(gShift.dim, 1);
 gShift.max = zeros(gShift.dim, 1);
+
 for i = 1:length(shiftAmount)
   gShift.xs{i} = gIn.xs{i} + shiftAmount(i);
   gShift.min(i) = min(gShift.xs{i}(:));
