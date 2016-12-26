@@ -434,10 +434,10 @@ for i = istart:length(tau)
         obsPlot = obstacle_i;
       end
     else
-      [gPlot, dataPlot] = proj(g, data_i, 1-plotDims, projpt);
+      [gPlot, dataPlot] = proj(g, data_i, ~plotDims, projpt);
       
       if strcmp(obsMode, 'time-varying')
-        [~, obsPlot] = proj(g, obstacle_i, 1-plotDims, projpt);
+        [~, obsPlot] = proj(g, obstacle_i, ~plotDims, projpt);
       end
     end
     
