@@ -21,8 +21,8 @@ dMax = [0; 0; 0];
 
 %% Grid
 gN = 101;
-gMin = [-5; -5; -pi];
-gMax = [5; 5; pi];
+gMin = [-7.5; -7.5; -pi];
+gMax = [7.5; 7.5; pi];
 g = createGrid(gMin, gMax, gN, 3);
 
 fig_size = [1150 450];
