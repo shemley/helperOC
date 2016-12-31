@@ -441,10 +441,13 @@ for i = istart:length(tau)
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', RS_level, gPlot.dim, false);
+    eAT_visSetIm.sliceDim = gPlot.dim;
+    eAT_visSetIm.applyLight = false;
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', RS_level, eAT_visSetIm);
     
     if strcmp(obsMode, 'time-varying')
-      extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
+      eAO_visSetIm.applyLight = false;
+      extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, eAO_visSetIm);
     end
     
     if need_light && gPlot.dim == 3
