@@ -99,13 +99,11 @@ end
 x = checkInterpInput(g, x);
 
 % eg. v = interpn(g.vs{1}, g.vs{2}, data, x(:,1), x(:,2), interp_method)
-interpn_argin_vs = cell(g.dim, 1);
 interpn_argin_x = cell(g.dim, 1);
 for i = 1:g.dim
-  interpn_argin_vs{i} = g.vs{i};
   interpn_argin_x{i} = x(:,i);
 end
 
-v = interpn(interpn_argin_vs{:}, data, interpn_argin_x{:}, interp_method);
+v = interpn(g.vs{:}, data, interpn_argin_x{:}, interp_method);
 
 end

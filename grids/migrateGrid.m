@@ -44,4 +44,5 @@ end
 dataNew = eval_u(gOld, dataOld, gNew_xsVec);
 dataNew = reshape(dataNew, gNew.N');
 dataNew(isnan(dataNew)) = max(dataNew(:));
+
 end
