@@ -64,7 +64,7 @@ g.bdry = cell(g.dim, 1);
 for i = 1:length(g.bdry)
   if any(i == pdDims)
     g.bdry{i} = @addGhostPeriodic;
-    g.max(i) = g.max(i) * (1 - 1/g.N(i));
+    g.max(i) = g.min(i) + (g.max(i) - g.min(i)) * (1 - 1/g.N(i));
   else
     g.bdry{i} = @addGhostExtrapolate;
   end
