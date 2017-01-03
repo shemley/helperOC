@@ -41,21 +41,26 @@ if nargin < 5
 end
 
 deleteLastPlot = true;
-
 if isfield(extraArgs, 'deleteLastPlot')
   deleteLastPlot = extraArgs.deleteLastPlot;
 end
 
+save_png = false;
+if isfield(extraArgs, 'fig_filename');
+  save_png = true;
+  fig_filename = extraArgs.fig_filename;
+end
 %%
 if g.dim == numDims(data)
   % Visualize a single set
   h = visSetIm_single(g, data, color, level, extraArgs);
+  export_fig('fig_filename', '-png', '-m2');
+  
 else
   dataSize = size(data);
   numSets = dataSize(end);
   
   colons = repmat({':'}, 1, g.dim);
-  
   
   for i = 1:numSets
     if i > 1
@@ -76,7 +81,9 @@ else
       h{i} = visSetIm_single(g, data(colons{:}, i), color, level, extraArgs);
     end
     
-    drawnow;
+    drawnow
+    
+    export_fig(sprintf('fig_filename_%d', i), '-png', '-m2');
   end
 end
 
