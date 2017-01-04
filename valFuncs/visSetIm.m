@@ -54,7 +54,9 @@ end
 if g.dim == numDims(data)
   % Visualize a single set
   h = visSetIm_single(g, data, color, level, extraArgs);
-  export_fig('fig_filename', '-png', '-m2');
+  if save_png
+    export_fig(fig_filename, '-png', '-m2');
+  end
   
 else
   dataSize = size(data);
@@ -83,7 +85,9 @@ else
     
     drawnow
     
-    export_fig(sprintf('fig_filename_%d', i), '-png', '-m2');
+    if save_png
+      export_fig(sprintf('fig_filename_%d', i), '-png', '-m2');
+    end
   end
 end
 
