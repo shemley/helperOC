@@ -13,7 +13,7 @@ end
 %% Default parameters
 Color = 'k';
 MarkerSize = 20;
-arrowLength = 10;
+ArrowLength = 10;
 LineStyle = 'none';
 LineWidth = 0.5;
 
@@ -25,8 +25,8 @@ if isfield(extraArgs, 'MarkerSize')
   MarkerSize = extraArgs.MarkerSize;
 end
 
-if isfield(extraArgs, 'arrowLength')
-  arrowLength = extraArgs.arrowLength;
+if isfield(extraArgs, 'ArrowLength')
+  ArrowLength = extraArgs.ArrowLength;
 end
 
 if isfield(extraArgs, 'LineStyle')
@@ -62,7 +62,7 @@ if isempty(obj.hpxpy) || ~isvalid(obj.hpxpy)
   % If no graphics handle has been created, create it with the specified
   % color. Use default color if no color is provided.
   obj.hpxpy = quiver(p(1), p(2), v(1), v(2), 'ShowArrowHead', ...
-    'on', 'AutoScaleFactor', arrowLength);
+    'on', 'AutoScaleFactor', ArrowLength);
   hold on
   
   obj.hpxpy.Marker = '.';

@@ -37,6 +37,7 @@ colors = flip(jet(length(tau)));
 %% Collision set
 R = 2;
 data0 = shapeCylinder(g, 3, [0;0;0], R);
+% data0 = shapeRectangleByCenter(g, [0;0;0], [R/2; R/2; inf]);
 
 switch which_illustration
   case 'Trajectories'
@@ -97,7 +98,7 @@ switch which_illustration
       folder, 'unsafe')
     
     x0 = [-4, -1, 0];
-    u = [wMax; -0.2*wMax];
+    u = [];
     simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [0 0.5 0], ...
       save_png, folder, 'safe')
     
