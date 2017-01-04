@@ -1,4 +1,4 @@
-function h = visSetIm(g, data, color, level, sliceDim, applyLight)
+function h = visSetIm(g, data, color, level, extraArgs)
 % h = visSetIm(g, data, color, level, sliceDim, applyLight)
 % Code for quickly visualizing level sets
 %
@@ -27,6 +27,7 @@ if g.dim ~= numDims(data) && g.dim+1 ~= numDims(data)
   error('Grid dimension is inconsistent with data dimension!')
 end
 
+%% Defaults
 if nargin < 3
   color = 'r';
 end
@@ -35,35 +36,54 @@ if nargin < 4
   level = 0;
 end
 
-% Slice last dimension by default
 if nargin < 5
-  sliceDim = g.dim;
+  extraArgs = [];
 end
 
-% Add cam light?
-if nargin < 6
-  applyLight = true;
+deleteLastPlot = true;
+if isfield(extraArgs, 'deleteLastPlot')
+  deleteLastPlot = extraArgs.deleteLastPlot;
 end
 
+save_png = false;
+if isfield(extraArgs, 'fig_filename');
+  save_png = true;
+  fig_filename = extraArgs.fig_filename;
+end
 %%
 if g.dim == numDims(data)
   % Visualize a single set
-  h = visSetIm_single(g, data, color, level, sliceDim, applyLight);
+  h = visSetIm_single(g, data, color, level, extraArgs);
+  export_fig('fig_filename', '-png', '-m2');
+  
 else
   dataSize = size(data);
   numSets = dataSize(end);
-  h = cell(numSets, 1);
+  
   colons = repmat({':'}, 1, g.dim);
   
   for i = 1:numSets
-    if i > 4
-      applyLight = false;
+    if i > 1
+      extraArgs.applyLight = false;
     end
     
-    h{i} = visSetIm_single(g, data(colons{:},i), color, level, sliceDim, ...
-      applyLight);
-
-    drawnow;
+    if deleteLastPlot
+      if i > 1
+        delete(h);
+      end
+      h = visSetIm_single(g, data(colons{:}, i), color, level, extraArgs);
+    else
+      if i == 1
+        h = cell(numSets, 1);
+        hold on
+      end
+      
+      h{i} = visSetIm_single(g, data(colons{:}, i), color, level, extraArgs);
+    end
+    
+    drawnow
+    
+    export_fig(sprintf('fig_filename_%d', i), '-png', '-m2');
   end
 end
 
@@ -71,9 +91,20 @@ end
 end
 
 %% Visualize a single set
-function h = visSetIm_single(g, data, color, level, sliceDim, applyLight)
-% h = visSetIm_single(g, data, color, level, applyLight)
+function h = visSetIm_single(g, data, color, level, extraArgs)
+% h = visSetIm_single(g, data, color, level, extraArgs)
 %     Displays level set depending on dimension of grid and data
+
+sliceDim = g.dim; % Slice last dimension by default
+applyLight = true; % Add cam light by default
+
+if isfield(extraArgs, 'sliceDim')
+  sliceDim = extraArgs.sliceDim;
+end
+
+if isfield(extraArgs, 'applyLight')
+  applyLight = extraArgs.applyLight;
+end
 
 switch g.dim
   case 1
@@ -105,9 +136,8 @@ isonormals(mesh_xs{:}, mesh_data, h);
 h.FaceColor = color;
 h.EdgeColor = 'none';
 
-lighting phong
-
 if applyLight
+  lighting phong
   camlight left
   camlight right
 end

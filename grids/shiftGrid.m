@@ -18,6 +18,9 @@ end
 
 % Dimensionality of grid
 gShift.dim = gIn.dim;
+gShift.bdry = gIn.bdry;
+gShift.dx = gIn.dx;
+gShift.N = gIn.N;
 
 %% Shift the grid
 gShift.xs = cell(gShift.dim, 1);
