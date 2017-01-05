@@ -86,7 +86,7 @@ else
     drawnow
     
     if save_png
-      export_fig(sprintf('fig_filename_%d', i), '-png', '-m2');
+      export_fig(sprintf('%s_%d', fig_filename, i), '-png', '-m2');
     end
   end
 end

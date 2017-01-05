@@ -244,12 +244,7 @@ startTime = cputime;
 
 %% Initialize PDE solution
 data0size = size(data0);
-
-if isfield(extraArgs,'keepLast')
-  data = zeros(data0size(1:gDim));
-else
-  data = zeros([data0size(1:gDim) length(tau)]);
-end
+data = zeros(data0size(1:gDim));
 
 if numDims(data0) == gDim
   % New computation
@@ -288,7 +283,7 @@ for i = istart:length(tau)
   if isfield(extraArgs, 'keepLast')
     y0 = data(clns{:});
   else
-    y0 = data(clns{:}, i-1);
+    y0 = data(clns{:}, size(data, g.dim+1));
   end
   y = y0(:);
   
@@ -344,13 +339,13 @@ for i = istart:length(tau)
   
   % Reshape value function
   if isfield(extraArgs, 'keepLast') 
-    %if you want to delete all but the last timestamp of data, use this
+    % if you want to delete all but the last timestamp of data, use this
     data(clns{:}) = reshape(y,g.shape);
-    data_i = data(clns{:});
   else
-    data(clns{:}, i) = reshape(y, g.shape);
-    data_i = data(clns{:}, i);
+    data = cat(g.dim+1, data, reshape(y, g.shape));
   end
+  
+  data_i = data(clns{:}, size(data, g.dim+1));
   
   %% If commanded, stop the reachable set computation once it contains
   % the initial state.
@@ -358,7 +353,6 @@ for i = istart:length(tau)
     initValue = eval_u(g, data_i, extraArgs.stopInit);
     if ~isnan(initValue) && initValue <= 0
       extraOuts.stoptau = tau(i);
-      data(clns{:}, i+1:size(data, gDim+1)) = [];
       tau(i+1:end) = [];
       break
     end
@@ -366,7 +360,7 @@ for i = istart:length(tau)
   
   %% Stop computation if reachable set contains a "stopSet"
   if exist('stopSet', 'var')
-    temp = data(clns{:}, i);
+    temp = data(clns{:}, end);
     dataInds = find(temp(:) <= stopLevel);
     
     if isfield(extraArgs, 'stopSetInclude')
@@ -377,7 +371,6 @@ for i = istart:length(tau)
     
     if stopSetFun(ismember(setInds, dataInds))
       extraOuts.stoptau = tau(i);
-      data(clns{:}, i+1:size(data, gDim+1)) = [];
       tau(i+1:end) = [];
       break
     end
@@ -385,7 +378,6 @@ for i = istart:length(tau)
   
   if stopConverge && change < convergeThreshold
     extraOuts.stoptau = tau(i);
-    data(clns{:}, i+1:size(data, gDim+1)) = [];
     tau(i+1:end) = [];
     break
   end
