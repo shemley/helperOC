@@ -1,7 +1,11 @@
-function Plane_test2()
+function Plane_test2(gN)
 % Plane_test()
 %   Tests the Plane class by computing a reachable set and then computing the
 %   optimal trajectory from the reachable set.
+
+if nargin < 1
+  gN = 41;
+end
 
 %% Plane parameters
 initState = [-25; -25; -45*pi/180];
@@ -11,8 +15,8 @@ dMax = [0; 0];
 pl = Plane(initState, wMax, vrange, dMax);
 
 %% Target and obstacles
-g = createGrid([-30; -30; -pi], [30; 30; pi], [151; 151; 151]);
-target = shapeRectangleByCorners(g, [-inf; -0.5; -2*pi/180], [inf; 0.5; 2*pi/180]);
+g = createGrid([-30; -30; -pi], [30; 30; pi], [gN; gN; gN], 3);
+target = shapeRectangleByCorners(g, [-inf; -1.5; -6*pi/180], [inf; 1.5; 6*pi/180]);
 
 %% Compute reachable set
 tau = 0:0.1:20;
