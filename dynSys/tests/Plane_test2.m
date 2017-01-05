@@ -34,15 +34,15 @@ extraArgs.fig_filename = 'Plane_test2/BRS';
 % extraArgs.plotData.projpt = pl.x(3);
 extraArgs.deleteLastPlot = true;
 
-[data, tau2] = HJIPDE_solve(target, tau, schemeData, 'none', extraArgs);
+[goal_sat_set.data, tau] = HJIPDE_solve(target, tau, schemeData, 'none', extraArgs);
+goal_sat_set.g = g;
+goal_sat_set.deriv = computeGradients(g, data);
 
-deriv = computeGradients(g, data);
-
-save(sprintf('%s.mat', mfilename), 'g', 'data', 'deriv', '-v7.3');
+save(sprintf('%s.mat', mfilename), 'goal_sat_set', '-v7.3');
 %% Compute optimal trajectory
 extraArgs.projDim = [1 1 0];
 extraArgs.fig_filename = 'Plane_test2/optTraj';
-[traj, traj_tau] = computeOptTraj(g, flip(data,4), tau2, pl, extraArgs);
+[traj, traj_tau] = computeOptTraj(g, flip(data,4), tau, pl, extraArgs);
 
 hold on;
 
