@@ -1,5 +1,5 @@
 function [trajA, trajB] = compute_avoidance_maneuver(safety_set, ...
-  goal_satisf_set, planeA, planeB)
+  goal_sat_set, planeA, planeB)
 
 if nargin < 3
   %% Vehicle parameters
@@ -47,9 +47,9 @@ for ti = 1:length(t)
     if safety_vals{veh} > small
       % If safe, use goal satisfaction controller
       x = rotate_to_goal_satisf_frame(planes{veh}.x, init_headings{veh});
-      p = eval_u(goal_satisf_set.g, goal_satisf_set.deriv, x);
+      p = eval_u(goal_sat_set.g, goal_sat_set.deriv, x);
       u = planes{veh}.optCtrl([], x, p, 'min');
-      goal_vals{veh} = eval_u(goal_satisf_set.g, goal_satisf_set.data, x);
+      goal_vals{veh} = eval_u(goal_sat_set.g, goal_sat_set.data, x);
       
     else
       % If not safe, use safety controller

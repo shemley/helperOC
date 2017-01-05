@@ -36,7 +36,7 @@ extraArgs.deleteLastPlot = true;
 
 [goal_sat_set.data, tau] = HJIPDE_solve(target, tau, schemeData, 'none', extraArgs);
 goal_sat_set.g = g;
-goal_sat_set.deriv = computeGradients(g, data);
+goal_sat_set.deriv = computeGradients(g, goal_sat_set.data);
 
 save(sprintf('%s.mat', mfilename), 'goal_sat_set', '-v7.3');
 %% Compute optimal trajectory

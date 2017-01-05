@@ -1,13 +1,17 @@
-function PlaneCAvoid_test()
+function PlaneCAvoid_test(gN)
 % PlaneCAvoid_test()
 %     Tests the PlaneCAvoid class; requires the level set toolbox, which can be
 %     found at https://www.cs.ubc.ca/~mitchell/ToolboxLS/
+
+if nargin < 1
+  gN = 41;
+end
 
 %% Grid
 % Choose this to be just big enough to cover the reachable set
 gMin = [-10; -15; 0];
 gMax = [25; 15; 2*pi];
-gN = [65; 65; 65];
+gN = gN*ones(3,1);
 g = createGrid(gMin, gMax, gN);
 
 %% Time
@@ -44,7 +48,9 @@ extraArgs.deleteLastPlot = true;
 extraArgs.keepLast = true;
 
 %% Call solver and save
-data = HJIPDE_solve(data0, tau, sD, 'zero', extraArgs);
-save(sprintf('%s.mat', mfilename), 'data', 'sD', 'tau', '-v7.3')
+safety_set.data = HJIPDE_solve(data0, tau, sD, 'zero', extraArgs);
+safety_set.g = g;
+safety_set.deriv = computeGradients(g, safety_set.data);
+save(sprintf('%s.mat', mfilename), 'safety_set', '-v7.3')
 
 end
