@@ -42,7 +42,8 @@ save(sprintf('%s.mat', mfilename), 'goal_sat_set', '-v7.3');
 %% Compute optimal trajectory
 extraArgs.projDim = [1 1 0];
 extraArgs.fig_filename = 'Plane_test2/optTraj';
-[traj, traj_tau] = computeOptTraj(g, flip(data,4), tau, pl, extraArgs);
+[traj, traj_tau] = computeOptTraj(g, flip(goal_sat_set.data,4), tau, pl, ...
+  extraArgs);
 
 hold on;
 
