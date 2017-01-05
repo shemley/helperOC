@@ -16,7 +16,7 @@ pl = Plane(initState, wMax, vrange, dMax);
 
 %% Target and obstacles
 g = createGrid([-30; -30; -pi], [30; 30; pi], [gN; gN; gN], 3);
-target = shapeRectangleByCorners(g, [-inf; -1.5; -6*pi/180], [inf; 1.5; 6*pi/180]);
+target = shapeRectangleByCorners(g, [-inf; -g.dx(2:3)], [inf; g.dx(2:3)]);
 
 %% Compute reachable set
 tau = 0:0.1:20;
