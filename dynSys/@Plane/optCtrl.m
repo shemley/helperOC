@@ -32,6 +32,7 @@ else
   elseif strcmp(uMode, 'min')
     uOpt(1) = (det1 >= 0) * min(obj.vrange) + (det1 < 0) * max(obj.vrange);
     uOpt(2) = -(deriv(3)>=0)*obj.wMax + (deriv(3)<0)*obj.wMax;
+    
   else
     error('Unknown uMode!')
   end
