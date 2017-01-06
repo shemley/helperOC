@@ -1,7 +1,25 @@
-function [trajA, trajB] = compute_avoidance_maneuver2(safety_set, ...
-  goal_sat_set, planeA, planeB, visualize)
+function [trajA, trajB] = compute_avoid_man(safety_set, goal_sat_set, ...
+  planeA, planeB, visualize)
+% [trajA, trajB] = compute_avoid_man(safety_set, goal_sat_set, planeA, ...
+%   planeB, visualize)
+%     Computes the trajectories from avoidance maneuvers for two planes
+%
+% Inputs:
+%     safety_set: Safety reachable set
+%     goal_sat_set: Goal satisfaction reachable set for getting back to original
+%                   path
+%     planeA, planeB: structs with vehicle parameters
+%         .x:      current state
+%         .wMax:   maximum turn rate
+%         .vrange: speed range (use eg. [5 5] for constant speed)
+%         .dMaxB:  disturbance (see Plane class)
+%
+% Outputs:
+%     trajA, trajB: list of 3D points resulting from avoidance
+%
+% Mo Chen, 2017-01-06
 
-if nargin < 3
+if nargin < 3 || isempty(planeA) || isempty(planeB)
   %% Vehicle parameters
   L = 10;
   xA = [-L; 0; 0];
@@ -29,7 +47,7 @@ else
 end
 
 if nargin < 5
-  visualize = false;
+  visualize = true;
 end
 
 x0 = {xA; xB};

@@ -1,4 +1,4 @@
-function Plane_test2(gN)
+function compute_goal_sat_set(gN)
 % Plane_test()
 %   Tests the Plane class by computing a reachable set and then computing the
 %   optimal trajectory from the reachable set.
@@ -29,9 +29,6 @@ schemeData.dMode = 'max';
 extraArgs.targets = target;
 extraArgs.stopInit = pl.x;
 extraArgs.visualize = true;
-extraArgs.fig_filename = 'Plane_test2/BRS';
-% extraArgs.plotData.plotDims = [1 1 0];
-% extraArgs.plotData.projpt = pl.x(3);
 extraArgs.deleteLastPlot = true;
 
 [goal_sat_set.data, tau] = HJIPDE_solve(target, tau, schemeData, 'zero', ...
@@ -41,8 +38,9 @@ goal_sat_set.deriv = computeGradients(g, goal_sat_set.data);
 goal_sat_set.TTR = TD2TTR(g, goal_sat_set.data, tau);
 goal_sat_set.TTRderiv = computeGradients(g, goal_sat_set.TTR);
 
-save(sprintf('%s.mat', mfilename), 'goal_sat_set', '-v7.3');
-%% Compute optimal trajectory
+save('goal_sat_set.mat', 'goal_sat_set', '-v7.3');
+
+%% Test by computing optimal trajectory
 extraArgs.projDim = [1 1 0];
 extraArgs.fig_filename = 'Plane_test2/optTraj';
 [traj, traj_tau] = computeOptTraj(g, flip(goal_sat_set.data,4), tau, pl, ...
