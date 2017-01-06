@@ -1,4 +1,4 @@
-function compute_avoid_test(visualize)
+function compute_avoid_man_test(visualize)
 
 if nargin < 1
   visualize = true;
