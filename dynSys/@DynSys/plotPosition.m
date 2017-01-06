@@ -16,6 +16,7 @@ MarkerSize = 20;
 ArrowLength = 10;
 LineStyle = 'none';
 LineWidth = 0.5;
+ArrowSize = 1;
 
 if isfield(extraArgs, 'Color')
   Color = extraArgs.Color;
@@ -27,6 +28,10 @@ end
 
 if isfield(extraArgs, 'ArrowLength')
   ArrowLength = extraArgs.ArrowLength;
+end
+
+if isfield(extraArgs, 'ArrowSize')
+  ArrowSize = extraArgs.ArrowSize;
 end
 
 if isfield(extraArgs, 'LineStyle')
@@ -69,7 +74,7 @@ if isempty(obj.hpxpy) || ~isvalid(obj.hpxpy)
   obj.hpxpy.Color = obj.hpxpyhist.Color;
   obj.hpxpy.MarkerFaceColor = obj.hpxpyhist.Color;
   obj.hpxpy.MarkerSize = MarkerSize;
-  obj.hpxpy.MaxHeadSize = 1;
+  obj.hpxpy.MaxHeadSize = ArrowSize;
   obj.hpxpy.LineWidth = 1.5;
 else
   % Otherwise, simply update graphics handles
