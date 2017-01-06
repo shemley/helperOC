@@ -34,7 +34,8 @@ extraArgs.fig_filename = 'Plane_test2/BRS';
 % extraArgs.plotData.projpt = pl.x(3);
 extraArgs.deleteLastPlot = true;
 
-[goal_sat_set.data, tau] = HJIPDE_solve(target, tau, schemeData, 'none', extraArgs);
+[goal_sat_set.data, tau] = HJIPDE_solve(target, tau, schemeData, 'zero', ...
+  extraArgs);
 goal_sat_set.g = g;
 goal_sat_set.deriv = computeGradients(g, goal_sat_set.data);
 

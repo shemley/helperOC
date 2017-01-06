@@ -68,19 +68,9 @@ while iter <= tauLength
   % Binary search
   upper = tauLength;
   lower = tEarliest+1;
-  while upper > lower
-    tEarliest = ceil((upper + lower)/2);
-    valueAtX = eval_u(g, data(clns{:}, tEarliest), dynSys.x);
-    if valueAtX < small
-      % point is in reachable set; eliminate all lower indices
-      lower = tEarliest;
-    else
-      % too late
-      upper = tEarliest - 1;
-    end
-  end
-  tEarliest = upper;
-    
+  
+  tEarliest = find_earliest_BRS_ind(g, data, dynSys.x, upper, lower);
+   
   % BRS at current time
   BRS_at_t = data(clns{:}, tEarliest);
   
