@@ -169,8 +169,22 @@ eval_pt = cell(g.dim, 1);
 xsi = 1;
 for i = 1:g.dim
   if dims(i)
+    % If this dimension is periodic, wrap the input point to the correct period
+    if isfield(g, 'bdry') && isequal(g.bdry{i}, @addGhostPeriodic)
+      period = max(g.vs{i}) - min(g.vs{i});
+      
+      while xs(xsi) > max(g.vs{i})
+        xs(xsi) = xs(xsi) - period;
+      end
+      
+      while xs(xsi) < min(g.vs{i})
+        xs(xsi) = xs(xsi) + period;
+      end
+    end
+    
     eval_pt{i} = xs(xsi);
     xsi = xsi + 1;
+    
   else
     eval_pt{i} = g.vs{i};
   end

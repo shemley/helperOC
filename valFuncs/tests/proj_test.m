@@ -99,6 +99,33 @@ switch whatTest
           ', dims = [' num2str(dims) '], ' xs])
       end
     end
+    
+  case 'periodic'
+    g = createGrid([-1 -1 -pi], [1 1 pi], [51 51 51], 3);
+    
+    % Radius goes from 0.1 to 0.6
+    R = 0.1 + 0.5*(g.xs{3}+pi) / 2 / pi;
+    data = sqrt(g.xs{1}.^2 + g.xs{2}.^2) - R;
+    
+    figure; 
+    visSetIm(g, data);
+    
+    figure;
+    N = 25;
+    small = 1e-2;
+    thetas = linspace(-3*pi, 3*pi - small, N);
+    spC = ceil(sqrt(N))+1;
+    spR = ceil(N/spC);
+    for i = 1:N
+      subplot(spR, spC, i)
+      [g2D, data2D] = proj(g, data, [0 0 1], thetas(i));
+      visSetIm(g2D, data2D);
+      axis square
+      grid on
+      title(sprintf('\\theta = %.2f', thetas(i)))
+    end
+    
+    
   otherwise
     error('Unknown test!')
 end

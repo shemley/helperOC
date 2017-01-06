@@ -52,7 +52,6 @@ if any(diff(tau)) < 0
 end
 
 % Time parameters
-small = 1e-4;
 iter = 1;
 tauLength = length(tau);
 dtSmall = (tau(2) - tau(1))/subSamples;
