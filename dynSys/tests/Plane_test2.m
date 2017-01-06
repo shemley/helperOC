@@ -38,6 +38,8 @@ extraArgs.deleteLastPlot = true;
   extraArgs);
 goal_sat_set.g = g;
 goal_sat_set.deriv = computeGradients(g, goal_sat_set.data);
+goal_sat_set.TTR = TD2TTR(g, goal_sat_set.data, tau);
+goal_sat_set.TTRderiv = computeGradients(g, goal_sat_set.TTR);
 
 save(sprintf('%s.mat', mfilename), 'goal_sat_set', '-v7.3');
 %% Compute optimal trajectory
@@ -50,5 +52,4 @@ hold on;
 
 plot(traj(1,:), traj(2,:), '.')
 
-keyboard
 end
