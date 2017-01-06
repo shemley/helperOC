@@ -56,8 +56,8 @@ switch which_illustration
     xlim([-4 4])
     ylim([-4 4])
     axis square
-    xlabel('x', 'FontSize', 16)
-    ylabel('y', 'FontSize', 16)
+%     xlabel('x', 'FontSize', 16)
+%     ylabel('y', 'FontSize', 16)
     grid on
         
     subplot(1,2,2)
@@ -77,15 +77,15 @@ switch which_illustration
     zlim([-2 4])
     axis square
     view(view_angle)
-    
-    xlabel('x', 'FontSize', 16)
-    ylabel('y', 'FontSize', 16)
-    zlabel('l(x, y)', 'FontSize', 16)
+%     
+%     xlabel('x', 'FontSize', 16)
+%     ylabel('y', 'FontSize', 16)
+%     zlabel('l(x, y)', 'FontSize', 16)
     grid on
     box on
 
     if save_png
-      export_fig(sprintf('%s/traj_basic', folder), '-png', '-m2');
+      export_fig(sprintf('%s/traj_basic', folder), '-png', '-m2', '-nocrop');
     end
     
     dynSys = DubinsCar([0;0;0], wMax, speed, dMax);
@@ -154,8 +154,8 @@ switch which_illustration
       
       if i == 1
         axis square
-        xlabel('x', 'FontSize', 16)
-        ylabel('y', 'FontSize', 16)
+%         xlabel('x', 'FontSize', 16)
+%         ylabel('y', 'FontSize', 16)
       end
       
       drawnow
@@ -163,7 +163,7 @@ switch which_illustration
     
     if save_png
       basic_fig_filename = sprintf('%s/basic_fig', folder);
-      export_fig(basic_fig_filename, '-png', '-m2')
+      export_fig(basic_fig_filename, '-png', '-m2', '-nocrop')
     end
     
     %% Visualize first few sets on the same plot
@@ -188,8 +188,8 @@ switch which_illustration
       xlim([-4 4])
       ylim([-4 4])
       axis square
-      xlabel('x', 'FontSize', 16)
-      ylabel('y', 'FontSize', 16)
+%       xlabel('x', 'FontSize', 16)
+%       ylabel('y', 'FontSize', 16)
       box on
       grid on
       hold on
@@ -213,16 +213,16 @@ switch which_illustration
         axis square
         view(view_angle)
         
-        xlabel('x', 'FontSize', 16)
-        ylabel('y', 'FontSize', 16)
-        zlabel('V(x, y, t)', 'FontSize', 16)
+%         xlabel('x', 'FontSize', 16)
+%         ylabel('y', 'FontSize', 16)
+%         zlabel('V(x, y, t)', 'FontSize', 16)
         box on
         grid on
       end
 
       if save_png
         figff_filename = sprintf('%s/figff_%d', folder, i);
-        export_fig(figff_filename, '-png', '-m2')
+        export_fig(figff_filename, '-png', '-m2', '-nocrop')
       end
     end
     
@@ -241,8 +241,8 @@ switch which_illustration
         hl1.LineWidth = 4;   
         hold on
         
-        xlabel('x', 'FontSize', 16)
-        ylabel('y', 'FontSize', 16)
+%         xlabel('x', 'FontSize', 16)
+%         ylabel('y', 'FontSize', 16)
         axis square
         box on
         grid on        
@@ -261,9 +261,9 @@ switch which_illustration
         camlight left
         camlight right
         
-        xlabel('x', 'FontSize', 16)
-        ylabel('y', 'FontSize', 16)
-        zlabel('V(x, y, t)', 'FontSize', 16)
+%         xlabel('x', 'FontSize', 16)
+%         ylabel('y', 'FontSize', 16)
+%         zlabel('V(x, y, t)', 'FontSize', 16)
         axis square
         view(view_angle)
         box on
@@ -282,7 +282,7 @@ switch which_illustration
       
       if save_png
         fig3D_filename = sprintf('%s/fig_%d', folder, i);
-        export_fig(fig3D_filename, '-png', '-m2')
+        export_fig(fig3D_filename, '-png', '-m2', '-nocrop')
       end
     end
     
@@ -308,7 +308,7 @@ drawnow
 
 if save_png
   fig_name = sprintf('%s/%s_0', folder, name);
-  export_fig(fig_name, '-png', '-m2')
+  export_fig(fig_name, '-png', '-m2', '-nocrop')
 end
 
 dCars = cell(length(u)+1, 1);
@@ -375,7 +375,7 @@ for i = 1:length(dCars)
     drawnow
     if save_png
       fig_name = sprintf('%s/%s_%d_%d', folder, name, i, ti);
-      export_fig(fig_name, '-png', '-m2')
+      export_fig(fig_name, '-png', '-m2', '-nocrop')
     end
   end
   
