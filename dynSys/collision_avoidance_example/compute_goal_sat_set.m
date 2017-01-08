@@ -33,6 +33,7 @@ extraArgs.deleteLastPlot = true;
 
 [goal_sat_set.data, tau] = HJIPDE_solve(target, tau, schemeData, 'zero', ...
   extraArgs);
+
 goal_sat_set.g = g;
 goal_sat_set.deriv = computeGradients(g, goal_sat_set.data);
 goal_sat_set.TTR = TD2TTR(g, goal_sat_set.data, tau);

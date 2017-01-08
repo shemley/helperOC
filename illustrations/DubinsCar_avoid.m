@@ -50,7 +50,8 @@ switch which_illustration
 
     [g2D, data02D] = proj(g, data0, [0 0 1]);
     
-    subplot(1,2,1)
+    hs1 = subplot(1,2,1);
+    
     plotDisk([0;0], R, 'color', colors(1,:), 'LineWidth', 3);
     hold on
     xlim([-4 4])
@@ -60,7 +61,9 @@ switch which_illustration
 %     ylabel('y', 'FontSize', 16)
     grid on
         
-    subplot(1,2,2)
+    hs1.FontSize = 16;
+    
+    hs2 = subplot(1,2,2);
     hvf = surf(g2D.vs{1}, g2D.vs{2}, data02D');
     hvf.FaceAlpha = 0.5;
     hvf.FaceColor = colors(1,:);
@@ -83,7 +86,8 @@ switch which_illustration
 %     zlabel('l(x, y)', 'FontSize', 16)
     grid on
     box on
-
+    hs2.FontSize = 16;
+    
     if save_png
       export_fig(sprintf('%s/traj_basic', folder), '-png', '-m2', '-nocrop');
     end
@@ -102,11 +106,11 @@ switch which_illustration
     simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [0 0.5 0], ...
       save_png, folder, 'safe')
     
-    x0 = [-2, -1, 0];
-    u = [];
-    maxTaui = ceil(0.9*length(tau));
-    simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [1 0.5 0], ...
-      save_png, folder, 'through')
+%     x0 = [-2, -1, 0];
+%     u = [];
+%     maxTaui = ceil(0.9*length(tau));
+%     simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [1 0.5 0], ...
+%       save_png, folder, 'through')
     
   case 'BRS_computation'
     datafile = sprintf('%s_data.mat', mfilename);
@@ -141,6 +145,7 @@ switch which_illustration
     %% Visualize first and final set
     f = figure;
     f.Color = 'white';
+    hs = subplot(1,1,1);
     inds = [1 length(BRS.tau)];
     
     hl1_ff = cell(2,1);
@@ -148,12 +153,14 @@ switch which_illustration
     for i = inds
       [g2D, data2D] = proj(BRS.g, BRS.data, [0 0 1], dynSys.x(3));
       
+      
       hl1_ff{i} = visSetIm(g2D, data2D(:,:,i), colors(i,:));
       hl1_ff{i}.LineWidth = 4;
       hold on
       
       if i == 1
         axis square
+        hs.FontSize = 16;
 %         xlabel('x', 'FontSize', 16)
 %         ylabel('y', 'FontSize', 16)
       end
@@ -181,7 +188,7 @@ switch which_illustration
       [g2D, data2D] = proj(BRS.g, BRS.data, [0 0 1], dynSys.x(3));
       
       % 2D line plot only
-      subplot(1,2,1)
+      hs1 = subplot(1,2,1);
       hl_ff1{i} = visSetIm(g2D, data2D(:,:,i), colors(i,:));
       hl_ff1{i}.LineWidth = 4;
       
@@ -195,7 +202,7 @@ switch which_illustration
       hold on
       
       % 3D surface plot and line plot
-      subplot(1,2,2)
+      hs2 = subplot(1,2,2);
       hs_ff{i} = surf(g2D.vs{1}, g2D.vs{2}, data2D(:,:,i)', ...
         'LineStyle', 'none', 'FaceColor', colors(i,:), 'FaceAlpha', 0.5);
       hold on
@@ -212,7 +219,8 @@ switch which_illustration
         zlim([-2 4])
         axis square
         view(view_angle)
-        
+        hs1.FontSize = 16;
+        hs2.FontSize = 16;
 %         xlabel('x', 'FontSize', 16)
 %         ylabel('y', 'FontSize', 16)
 %         zlabel('V(x, y, t)', 'FontSize', 16)
@@ -236,7 +244,7 @@ switch which_illustration
       
       if i == 1
         % 2D plot
-        subplot(1,2,1)
+        hs3 = subplot(1,2,1);
         hl1 = visSetIm(g2D, data2D(:,:,i), colors(i,:));
         hl1.LineWidth = 4;   
         hold on
@@ -247,8 +255,10 @@ switch which_illustration
         box on
         grid on        
         
+        hs3.FontSize = 16;
+        
         % 3D plot
-        subplot(1,2,2)
+        hs4 = subplot(1,2,2);
         hs = surf(g2D.vs{1}, g2D.vs{2}, data2D(:,:,i)');
         hs.LineStyle = 'none';
         hs.FaceColor = colors(i,:);
@@ -268,6 +278,9 @@ switch which_illustration
         view(view_angle)
         box on
         grid on
+        
+        hs4.FontSize = 16;
+        
       else
         hl1.ZData = data2D(:,:,i);
         hl1.Color = colors(i,:);

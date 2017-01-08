@@ -85,6 +85,10 @@ end
 
 extraOuts = [];
 quiet = false;
+low_memory = false;
+keepLast = false;
+flip_output = false;
+
 small = 1e-4;
 g = schemeData.grid;
 gDim = g.dim;
@@ -93,8 +97,27 @@ clns = repmat({':'}, 1, gDim);
 %% Extract the information from extraargs
 % Quiet mode
 if isfield(extraArgs, 'quiet') && extraArgs.quiet
+  fprintf('HJIPDE_solve running in quiet mode...\n')
   quiet = true;
 end
+
+% Low memory mode
+if isfield(extraArgs, 'low_memory') && extraArgs.low_memory
+  fprintf('HJIPDE_solve running in low memory mode...\n')
+  low_memory = true;
+  
+  % Save the output in reverse order
+  if isfield(extraArgs, 'flip_output') && extraArgs.flip_output
+    flip_output = true;
+  end  
+
+end
+
+if isfield(extraArgs, 'keepLast') && extraArgs.keepLast
+  keepLast = true;
+end
+
+
 
 % Extract the information about obstacles
 obsMode = 'none';
@@ -120,8 +143,7 @@ end
 
 % Check validity of stopInit if needed
 if isfield(extraArgs, 'stopInit')
-  if ~isvector(extraArgs.stopInit) || ...
-      gDim ~= length(extraArgs.stopInit)
+  if ~isvector(extraArgs.stopInit) || gDim ~= length(extraArgs.stopInit)
     error('stopInit must be a vector of length g.dim!')
   end
 end
@@ -244,15 +266,29 @@ startTime = cputime;
 
 %% Initialize PDE solution
 data0size = size(data0);
-data = zeros(data0size(1:gDim));
 
 if numDims(data0) == gDim
   % New computation
-  data(clns{:}, 1) = data0;
+  if keepLast
+    data = data0;
+  elseif low_memory
+    data = single(data0);
+  else
+    data = zeros([data0size(1:gDim) length(tau)]);
+    data(clns{:}, 1) = data0;
+  end
+  
   istart = 2;
 elseif numDims(data0) == gDim + 1
   % Continue an old computation
-  data(clns{:}, 1:data0size(end)) = data0;
+  if keepLast
+    data = data0(clns{:}, data0size(end));
+  elseif low_memory
+    data = single(data0(clns{:}, data0size(end)));
+  else
+    data = zeros([data0size(1:gDim) length(tau)]);
+    data(clns{:}, 1:data0size(end)) = data0;
+  end
   
   % Start at custom starting index if specified
   if isfield(extraArgs, 'istart')
@@ -280,10 +316,17 @@ for i = istart:length(tau)
       paramsIn);
   end
   
-  if isfield(extraArgs, 'keepLast')
-    y0 = data(clns{:});
+  if keepLast
+    y0 = data;
+  elseif low_memory
+    if flip_output
+      y0 = data(clns{:}, 1);
+    else
+      y0 = data(clns{:}, size(data, g.dim+1));
+    end
+    
   else
-    y0 = data(clns{:}, size(data, g.dim+1));
+    y0 = data(clns{:}, i-1);
   end
   y = y0(:);
   
@@ -338,14 +381,19 @@ for i = istart:length(tau)
   end
   
   % Reshape value function
-  if isfield(extraArgs, 'keepLast') 
-    % if you want to delete all but the last timestamp of data, use this
-    data(clns{:}) = reshape(y,g.shape);
+  data_i = reshape(y, g.shape);
+  if keepLast
+    data = data_i;
+  elseif low_memory
+    if flip_output
+      data = cat(g.dim+1, reshape(y, g.shape), data);
+    else
+      data = cat(g.dim+1, data, reshape(y, g.shape));
+    end
+    
   else
-    data = cat(g.dim+1, data, reshape(y, g.shape));
+    data(clns{:}, i) = data_i;
   end
-  
-  data_i = data(clns{:}, size(data, g.dim+1));
   
   %% If commanded, stop the reachable set computation once it contains
   % the initial state.
@@ -360,8 +408,7 @@ for i = istart:length(tau)
   
   %% Stop computation if reachable set contains a "stopSet"
   if exist('stopSet', 'var')
-    temp = data(clns{:}, end);
-    dataInds = find(temp(:) <= stopLevel);
+    dataInds = find(data_i(:) <= stopLevel);
     
     if isfield(extraArgs, 'stopSetInclude')
       stopSetFun = @all;
