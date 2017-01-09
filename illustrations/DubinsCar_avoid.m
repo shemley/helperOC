@@ -47,7 +47,7 @@ switch which_illustration
     f = figure;
     f.Position(3:4) = fig_size;
     f.Color = 'white';
-
+    
     [g2D, data02D] = proj(g, data0, [0 0 1]);
     
     hs1 = subplot(1,2,1);
@@ -57,10 +57,10 @@ switch which_illustration
     xlim([-4 4])
     ylim([-4 4])
     axis square
-%     xlabel('x', 'FontSize', 16)
-%     ylabel('y', 'FontSize', 16)
+    %     xlabel('x', 'FontSize', 16)
+    %     ylabel('y', 'FontSize', 16)
     grid on
-        
+    
     hs1.FontSize = 16;
     
     hs2 = subplot(1,2,2);
@@ -80,10 +80,10 @@ switch which_illustration
     zlim([-2 4])
     axis square
     view(view_angle)
-%     
-%     xlabel('x', 'FontSize', 16)
-%     ylabel('y', 'FontSize', 16)
-%     zlabel('l(x, y)', 'FontSize', 16)
+    %
+    %     xlabel('x', 'FontSize', 16)
+    %     ylabel('y', 'FontSize', 16)
+    %     zlabel('l(x, y)', 'FontSize', 16)
     grid on
     box on
     hs2.FontSize = 16;
@@ -106,11 +106,11 @@ switch which_illustration
     simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [0 0.5 0], ...
       save_png, folder, 'safe')
     
-%     x0 = [-2, -1, 0];
-%     u = [];
-%     maxTaui = ceil(0.9*length(tau));
-%     simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [1 0.5 0], ...
-%       save_png, folder, 'through')
+    %     x0 = [-2, -1, 0];
+    %     u = [];
+    %     maxTaui = ceil(0.9*length(tau));
+    %     simulateTrajectories(x0, maxTaui, u, BRS, dynSys, dt, [1 0.5 0], ...
+    %       save_png, folder, 'through')
     
   case 'BRS_computation'
     datafile = sprintf('%s_data.mat', mfilename);
@@ -161,16 +161,16 @@ switch which_illustration
       if i == 1
         axis square
         hs.FontSize = 16;
-%         xlabel('x', 'FontSize', 16)
-%         ylabel('y', 'FontSize', 16)
+        %         xlabel('x', 'FontSize', 16)
+        %         ylabel('y', 'FontSize', 16)
       end
       
       drawnow
-    end
-    
-    if save_png
-      basic_fig_filename = sprintf('%s/basic_fig', folder);
-      export_fig(basic_fig_filename, '-png', '-m2', '-nocrop')
+      
+      if save_png
+        basic_fig_filename = sprintf('%s/basic_fig_%d', folder, i);
+        export_fig(basic_fig_filename, '-png', '-m2', '-nocrop')
+      end
     end
     
     %% Visualize first few sets on the same plot
@@ -195,8 +195,8 @@ switch which_illustration
       xlim([-4 4])
       ylim([-4 4])
       axis square
-%       xlabel('x', 'FontSize', 16)
-%       ylabel('y', 'FontSize', 16)
+      %       xlabel('x', 'FontSize', 16)
+      %       ylabel('y', 'FontSize', 16)
       box on
       grid on
       hold on
@@ -221,16 +221,94 @@ switch which_illustration
         view(view_angle)
         hs1.FontSize = 16;
         hs2.FontSize = 16;
-%         xlabel('x', 'FontSize', 16)
-%         ylabel('y', 'FontSize', 16)
-%         zlabel('V(x, y, t)', 'FontSize', 16)
+        %         xlabel('x', 'FontSize', 16)
+        %         ylabel('y', 'FontSize', 16)
+        %         zlabel('V(x, y, t)', 'FontSize', 16)
         box on
         grid on
       end
-
+      
       if save_png
         figff_filename = sprintf('%s/figff_%d', folder, i);
         export_fig(figff_filename, '-png', '-m2', '-nocrop')
+      end
+      
+      if i == 3
+        hl_ff1{i}.Visible = 'off';
+        hs_ff{i}.Visible = 'off';
+        hl_ff{i}.Visible = 'off';
+        % Unsafe trajectories
+        x0_unsafe = {[-1.8; 1.3; 0]; [-2.2; 0.5; 0]; [-2.2; -0.5; 0]; ...
+          [-1.8; -1.3; 0]};
+        
+        h_unsafe_3 = cell(length(x0_unsafe), 1);
+        for j = 1:length(x0_unsafe)
+          x0 = x0_unsafe{j};
+          h_unsafe_3{j} = simulateTrajectories(x0, 3, [], BRS, dynSys, dt, 'b', ...
+            save_png, folder, sprintf('fig_ff_unsafe_%d_%d', i, j));
+        end
+        
+        % Safe trajectories
+        x0_safe = {[-1; 2; 0]; [-2.4; 1; 0]; [-2.4; -1; 0]; [-1; -2; 0]};
+        
+        h_safe_3 = cell(length(x0_safe),1);
+        for j = 1:length(x0_safe)
+          x0 = x0_safe{j};
+          h_safe_3{j} = simulateTrajectories(x0, 3, [], BRS, dynSys, dt, ...
+            [0 0.5 0], save_png, folder, sprintf('fig_ff_safe_%d_%d', i, j));
+        end
+        hl_ff1{i}.Visible = 'on';
+        hs_ff{i}.Visible = 'on';
+        hl_ff{i}.Visible = 'on';
+        
+        if save_png
+          figff_filename = sprintf('%s/figff_%d_final', folder, i);
+          export_fig(figff_filename, '-png', '-m2', '-nocrop')
+        end        
+        
+      elseif i == 5
+        hl_ff1{i}.Visible = 'off';
+        hs_ff{i}.Visible = 'off';
+        hl_ff{i}.Visible = 'off';
+        
+        for j = 1:length(h_unsafe_3)
+          for k = 1:length(h_unsafe_3{j})
+            h_unsafe_3{j}{k}.Visible = 'off';
+          end
+        end
+        
+        for j = 1:length(h_safe_3)
+          for k = 1:length(h_safe_3{j})
+            h_safe_3{j}{k}.Visible = 'off';
+          end
+        end
+        
+        % Unsafe trajectories
+        x0_unsafe = {[-2.2; 1.2; 0]; [-2.6; 0.5; 0]; [-2.6; -0.5; 0]; ...
+          [-2.2; -1.2; 0]};
+        for j = 1:length(x0_unsafe)
+          x0 = x0_unsafe{j};
+          simulateTrajectories(x0, 3, [], BRS, dynSys, dt, 'b', save_png, ...
+            folder, sprintf('fig_ff_unsafe_%d_%d', i, j));
+        end
+        
+        % Safe trajectories
+        x0_safe = {[-1.8; 1.8; 0]; [-2.6; 1; 0]; [-2.6; -1; 0]; ...
+          [-1.8; -1.8; 0]};
+        for j = 1:length(x0_safe)
+          x0 = x0_safe{j};
+          simulateTrajectories(x0, 3, [], BRS, dynSys, dt, [0 0.5 0], ...
+            save_png, folder, sprintf('fig_ff_safe_%d_%d', i, j));
+        end
+        
+        hl_ff1{i}.Visible = 'on';
+        hs_ff{i}.Visible = 'on';
+        hl_ff{i}.Visible = 'on';
+        
+        if save_png
+          figff_filename = sprintf('%s/figff_%d_final', folder, i);
+          export_fig(figff_filename, '-png', '-m2', '-nocrop')
+        end           
       end
     end
     
@@ -246,14 +324,14 @@ switch which_illustration
         % 2D plot
         hs3 = subplot(1,2,1);
         hl1 = visSetIm(g2D, data2D(:,:,i), colors(i,:));
-        hl1.LineWidth = 4;   
+        hl1.LineWidth = 4;
         hold on
         
-%         xlabel('x', 'FontSize', 16)
-%         ylabel('y', 'FontSize', 16)
+        %         xlabel('x', 'FontSize', 16)
+        %         ylabel('y', 'FontSize', 16)
         axis square
         box on
-        grid on        
+        grid on
         
         hs3.FontSize = 16;
         
@@ -271,9 +349,9 @@ switch which_illustration
         camlight left
         camlight right
         
-%         xlabel('x', 'FontSize', 16)
-%         ylabel('y', 'FontSize', 16)
-%         zlabel('V(x, y, t)', 'FontSize', 16)
+        %         xlabel('x', 'FontSize', 16)
+        %         ylabel('y', 'FontSize', 16)
+        %         zlabel('V(x, y, t)', 'FontSize', 16)
         axis square
         view(view_angle)
         box on
@@ -305,7 +383,7 @@ end
 
 end
 
-function simulateTrajectories(x0, maxi, u, BRS, dynSys, dt, c, save_png, ...
+function h = simulateTrajectories(x0, maxi, u, BRS, dynSys, dt, c, save_png, ...
   folder, name)
 
 [g2D, data02D] = proj(BRS.g, BRS.data(:,:,:,1), [0 0 1]);
@@ -313,10 +391,10 @@ function simulateTrajectories(x0, maxi, u, BRS, dynSys, dt, c, save_png, ...
 z0 = eval_u(g2D, data02D, x0(1:2));
 
 subplot(1,2,1)
-plot(x0(1), x0(2), 's', 'color', c, 'MarkerFaceColor', c);
+hic2 = plot(x0(1), x0(2), 's', 'color', c, 'MarkerFaceColor', c);
 
 subplot(1,2,2)
-plot3(x0(1), x0(2), z0, 's', 'color', c, 'MarkerFaceColor', c);
+hic3 = plot3(x0(1), x0(2), z0, 's', 'color', c, 'MarkerFaceColor', c);
 drawnow
 
 if save_png
@@ -372,7 +450,7 @@ for i = 1:length(dCars)
       hq1.VData = qv;
       
       ht1.XData = dCars{i}.xhist(1,:);
-      ht1.YData = dCars{i}.xhist(2,:);      
+      ht1.YData = dCars{i}.xhist(2,:);
       
       hq.XData = dCars{i}.x(1);
       hq.YData = dCars{i}.x(2);
@@ -392,5 +470,6 @@ for i = 1:length(dCars)
     end
   end
   
+  h = {hic2; hic3; hq1; ht1; hq; ht};
 end
 end
