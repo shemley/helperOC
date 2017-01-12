@@ -117,7 +117,13 @@ switch g.dim
     plot(g.xs{1}, zeros(size(g.xs{1})), 'k:')
     
   case 2
-    [~, h] = contour(g.xs{1}, g.xs{2}, data, [level level], 'color', color);
+    if isscalar(level)
+      [~, h] = contour(g.xs{1}, g.xs{2}, data, [level level], 'color', color);
+    elseif isempty(level)
+      [~, h] = contour(g.xs{1}, g.xs{2}, data);
+    else
+      [~, h] = contour(g.xs{1}, g.xs{2}, data, level, 'color', color);
+    end
     
   case 3
     h = visSetIm3D(g, data, color, level, applyLight);

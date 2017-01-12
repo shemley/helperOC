@@ -14,7 +14,7 @@ if nargin < 3
   vRangeB = [5 5];
   dMaxB = [0 0];
   
-  
+
 else
   xA = planeA.x;
   wMaxA = planeA.wMax;
