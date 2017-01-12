@@ -402,6 +402,10 @@ for i = istart:length(tau)
     if ~isnan(initValue) && initValue <= 0
       extraOuts.stoptau = tau(i);
       tau(i+1:end) = [];
+      
+      if ~low_memory && ~keepLast
+        data(clns{:}, i+1:size(data, gDim+1)) = [];
+      end
       break
     end
   end
@@ -419,6 +423,10 @@ for i = istart:length(tau)
     if stopSetFun(ismember(setInds, dataInds))
       extraOuts.stoptau = tau(i);
       tau(i+1:end) = [];
+      
+      if ~low_memory && ~keepLast
+        data(clns{:}, i+1:size(data, gDim+1)) = [];
+      end      
       break
     end
   end
@@ -426,6 +434,10 @@ for i = istart:length(tau)
   if stopConverge && change < convergeThreshold
     extraOuts.stoptau = tau(i);
     tau(i+1:end) = [];
+    
+    if ~low_memory && ~keepLast
+      data(clns{:}, i+1:size(data, gDim+1)) = [];
+    end    
     break
   end
   
