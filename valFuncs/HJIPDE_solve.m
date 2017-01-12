@@ -524,8 +524,8 @@ for i = istart:length(tau)
 end
 
 endTime = cputime;
-if quiet == 0;
-fprintf('Total execution time %g seconds\n', endTime - startTime);
+if ~quiet;
+  fprintf('Total execution time %g seconds\n', endTime - startTime);
 end
 end
 

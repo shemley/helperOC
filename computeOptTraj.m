@@ -60,13 +60,13 @@ dtSmall = (tau(2) - tau(1))/subSamples;
 % Initialize trajectory
 traj = nan(3, tauLength);
 traj(:,1) = dynSys.x;
-tEarliest = 0;
+tEarliest = 1;
 
 while iter <= tauLength 
   % Determine the earliest time that the current state is in the reachable set
   % Binary search
   upper = tauLength;
-  lower = tEarliest+1;
+  lower = tEarliest;
   
   tEarliest = find_earliest_BRS_ind(g, data, dynSys.x, upper, lower);
    
