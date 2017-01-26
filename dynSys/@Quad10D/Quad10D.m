@@ -2,6 +2,8 @@ classdef Quad10D < DynSys
   properties
     uMin        % Control bounds (3x1 vector)
     uMax
+    dMax
+    dMin
     
     % Constants
     %   The choices of n0, d1, d0 actually results in a very large
@@ -20,7 +22,7 @@ classdef Quad10D < DynSys
   end
   
   methods
-    function obj = Quad10D(x, uMin, uMax, dims)
+    function obj = Quad10D(x, uMin, uMax, dMax, dMin, dims)
       % obj = Quad10D(x, uMin, uMax)
       %     Constructor for a 10D quadrotor
       %
@@ -45,7 +47,12 @@ classdef Quad10D < DynSys
         uMin = [-10/180*pi; -10/180*pi; 0];
       end
       
-      if nargin < 4
+      if nargin<4
+        dMax = [0.5;0.5;0.5];
+        dMin = [-0.5;-0.5;-0.5];
+      end
+      
+      if nargin < 5
         dims = 1:4;
       end
       
@@ -54,6 +61,8 @@ classdef Quad10D < DynSys
       
       obj.uMax = uMax;
       obj.uMin = uMin;
+      obj.dMax = dMax;
+      obj.dMin = dMin;
       
       obj.dims = dims;
       obj.nx = length(dims);

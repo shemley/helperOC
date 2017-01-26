@@ -1,4 +1,4 @@
-function dx = dynamics(obj, ~, x, u, ~)
+function dx = dynamics(obj, ~, x, u, d)
 % dx = dynamics(obj, ~, x, u, ~)
 %     Dynamics of the 10D Quadrotor
 %         \dot x_1 = x_2
@@ -21,7 +21,7 @@ if iscell(x)
   dx = cell(length(dims), 1);
   
   for i = 1:length(dims)
-    dx{i} = dynamics_cell_helper(obj, x, u, dims, dims(i));
+    dx{i} = dynamics_cell_helper(obj, x, u, d, dims, dims(i));
   end
 else
   error('Not implemented yet...')
@@ -29,10 +29,10 @@ end
 
 end
 
-function dx = dynamics_cell_helper(obj, x, u, dims, dim)
+function dx = dynamics_cell_helper(obj, x, u, d, dims, dim)
 switch dim
   case 1
-    dx = x{dims==2};
+    dx = x{dims==2} - d{1};
   case 2
     dx = obj.g * tan(x{dims==3});
   case 3
@@ -40,7 +40,7 @@ switch dim
   case 4
     dx = -obj.d0 * x{dims==3} + obj.n0 * u{1};
   case 5
-    dx = x{dims==5};
+    dx = x{dims==5} - d{2};
   case 6
     dx = obj.g * tan(x{dims==7});
   case 7
@@ -48,7 +48,7 @@ switch dim
   case 8
     dx = -obj.d0 * x{dims==7} + obj.n0 * u{2};
   case 9
-    dx = x{dims==10};
+    dx = x{dims==10} - d{3};
   case 10
     dx = obj.kT * u{3} - obj.g;
     
