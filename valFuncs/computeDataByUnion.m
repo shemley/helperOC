@@ -53,9 +53,10 @@ disp([num2str(nnz(near_and_in)) ' out of ' num2str(nnz(data0<0)) ...
   ' grid points near the interface'])
 
 % Get the list of shifts and rotations
+shifts = zeros(nnz(near_and_in), g.dim);
 shifts_x = g.xs{pdims(1)}(near_and_in);
 shifts_y = g.xs{pdims(2)}(near_and_in);
-shifts = [shifts_x shifts_y];
+shifts(:, pdims) = [shifts_x shifts_y];
 
 if ~isempty(adim)
   thetas = g.xs{adim}(near_and_in);
@@ -70,7 +71,10 @@ for i = 1:length(near_and_in)
     data_rot = rotateData(base_g, base_data, thetas(i), pdims, adim);
   end
   
-  data_rot_shift = shiftData(base_g, data_rot, shifts(i,:), pdims);
-  data = min(data, data_rot_shift);
+  g_shift = shiftGrid(base_g, shifts(i,:));
+  data_rot_shift_migrated = migrateGrid(g_shift, data_rot, g);
+%   data_rot_shift = shiftData(base_g, data_rot, shifts(i,:), pdims);
+%   data_rot_shift_migrated = migrateGrid(base_g, data_rot_shift, g);
+  data = min(data, data_rot_shift_migrated);
 end
 end

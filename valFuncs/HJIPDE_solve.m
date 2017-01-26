@@ -23,6 +23,7 @@ function [data, tau, extraOuts] = ...
 %                 datas
 %     .compRegion: unused for now (meant to limit computation region)
 %     .visualize:  set to true to visualize reachable set
+%     .RS_level:  level set of reachable set to visualize (defaults to 0)
 %     .plotData:   information required to plot the data (need to fill in)
 %     .deleteLastPlot:
 %         set to true to delete previous plot before displaying next one
@@ -84,6 +85,10 @@ end
 
 extraOuts = [];
 quiet = false;
+low_memory = false;
+keepLast = false;
+flip_output = false;
+
 small = 1e-4;
 g = schemeData.grid;
 gDim = g.dim;
@@ -92,8 +97,27 @@ clns = repmat({':'}, 1, gDim);
 %% Extract the information from extraargs
 % Quiet mode
 if isfield(extraArgs, 'quiet') && extraArgs.quiet
+  fprintf('HJIPDE_solve running in quiet mode...\n')
   quiet = true;
 end
+
+% Low memory mode
+if isfield(extraArgs, 'low_memory') && extraArgs.low_memory
+  fprintf('HJIPDE_solve running in low memory mode...\n')
+  low_memory = true;
+  
+  % Save the output in reverse order
+  if isfield(extraArgs, 'flip_output') && extraArgs.flip_output
+    flip_output = true;
+  end  
+
+end
+
+if isfield(extraArgs, 'keepLast') && extraArgs.keepLast
+  keepLast = true;
+end
+
+
 
 % Extract the information about obstacles
 obsMode = 'none';
@@ -119,8 +143,7 @@ end
 
 % Check validity of stopInit if needed
 if isfield(extraArgs, 'stopInit')
-  if ~isvector(extraArgs.stopInit) || ...
-      gDim ~= length(extraArgs.stopInit)
+  if ~isvector(extraArgs.stopInit) || gDim ~= length(extraArgs.stopInit)
     error('stopInit must be a vector of length g.dim!')
   end
 end
@@ -154,6 +177,11 @@ end
 
 %% Visualization
 if isfield(extraArgs, 'visualize') && extraArgs.visualize
+  RS_level = 0;
+  if isfield(extraArgs, 'RS_level')
+    RS_level = extraArgs.RS_level;
+  end
+  
   % Extract the information about plotData
   plotDims = ones(gDim, 1);
   projpt = [];  
@@ -198,6 +226,8 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
       plot3(projectedInit(1), projectedInit(2), projectedInit(3), 'b*')
     end
   end
+  
+  grid on
 end
 
 % Extract cdynamical system if needed
@@ -237,19 +267,28 @@ startTime = cputime;
 %% Initialize PDE solution
 data0size = size(data0);
 
-if isfield(extraArgs,'keepLast')
-  data = zeros(data0size(1:gDim));
-else
-  data = zeros([data0size(1:gDim) length(tau)]);
-end
-
 if numDims(data0) == gDim
   % New computation
-  data(clns{:}, 1) = data0;
+  if keepLast
+    data = data0;
+  elseif low_memory
+    data = single(data0);
+  else
+    data = zeros([data0size(1:gDim) length(tau)]);
+    data(clns{:}, 1) = data0;
+  end
+  
   istart = 2;
 elseif numDims(data0) == gDim + 1
   % Continue an old computation
-  data(clns{:}, 1:data0size(end)) = data0;
+  if keepLast
+    data = data0(clns{:}, data0size(end));
+  elseif low_memory
+    data = single(data0(clns{:}, data0size(end)));
+  else
+    data = zeros([data0size(1:gDim) length(tau)]);
+    data(clns{:}, 1:data0size(end)) = data0;
+  end
   
   % Start at custom starting index if specified
   if isfield(extraArgs, 'istart')
@@ -277,8 +316,15 @@ for i = istart:length(tau)
       paramsIn);
   end
   
-  if isfield(extraArgs, 'keepLast')
-    y0 = data(clns{:});
+  if keepLast
+    y0 = data;
+  elseif low_memory
+    if flip_output
+      y0 = data(clns{:}, 1);
+    else
+      y0 = data(clns{:}, size(data, g.dim+1));
+    end
+    
   else
     y0 = data(clns{:}, i-1);
   end
@@ -335,13 +381,18 @@ for i = istart:length(tau)
   end
   
   % Reshape value function
-  if isfield(extraArgs, 'keepLast') 
-    %if you want to delete all but the last timestamp of data, use this
-    data(clns{:}) = reshape(y,g.shape);
-    data_i = data(clns{:});
+  data_i = reshape(y, g.shape);
+  if keepLast
+    data = data_i;
+  elseif low_memory
+    if flip_output
+      data = cat(g.dim+1, reshape(y, g.shape), data);
+    else
+      data = cat(g.dim+1, data, reshape(y, g.shape));
+    end
+    
   else
-    data(clns{:}, i) = reshape(y, g.shape);
-    data_i = data(clns{:}, i);
+    data(clns{:}, i) = data_i;
   end
   
   %% If commanded, stop the reachable set computation once it contains
@@ -350,16 +401,18 @@ for i = istart:length(tau)
     initValue = eval_u(g, data_i, extraArgs.stopInit);
     if ~isnan(initValue) && initValue <= 0
       extraOuts.stoptau = tau(i);
-      data(clns{:}, i+1:size(data, gDim+1)) = [];
       tau(i+1:end) = [];
+      
+      if ~low_memory && ~keepLast
+        data(clns{:}, i+1:size(data, gDim+1)) = [];
+      end
       break
     end
   end
   
   %% Stop computation if reachable set contains a "stopSet"
   if exist('stopSet', 'var')
-    temp = data(clns{:}, i);
-    dataInds = find(temp(:) <= stopLevel);
+    dataInds = find(data_i(:) <= stopLevel);
     
     if isfield(extraArgs, 'stopSetInclude')
       stopSetFun = @all;
@@ -369,16 +422,22 @@ for i = istart:length(tau)
     
     if stopSetFun(ismember(setInds, dataInds))
       extraOuts.stoptau = tau(i);
-      data(clns{:}, i+1:size(data, gDim+1)) = [];
       tau(i+1:end) = [];
+      
+      if ~low_memory && ~keepLast
+        data(clns{:}, i+1:size(data, gDim+1)) = [];
+      end      
       break
     end
   end
   
   if stopConverge && change < convergeThreshold
     extraOuts.stoptau = tau(i);
-    data(clns{:}, i+1:size(data, gDim+1)) = [];
     tau(i+1:end) = [];
+    
+    if ~low_memory && ~keepLast
+      data(clns{:}, i+1:size(data, gDim+1)) = [];
+    end    
     break
   end
   
@@ -426,17 +485,20 @@ for i = istart:length(tau)
         obsPlot = obstacle_i;
       end
     else
-      [gPlot, dataPlot] = proj(g, data_i, 1-plotDims, projpt);
+      [gPlot, dataPlot] = proj(g, data_i, ~plotDims, projpt);
       
       if strcmp(obsMode, 'time-varying')
-        [~, obsPlot] = proj(g, obstacle_i, 1-plotDims, projpt);
+        [~, obsPlot] = proj(g, obstacle_i, ~plotDims, projpt);
       end
     end
     
-    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', 0, gPlot.dim, false);
+    eAT_visSetIm.sliceDim = gPlot.dim;
+    eAT_visSetIm.applyLight = false;
+    extraOuts.hT = visSetIm(gPlot, dataPlot, 'r', RS_level, eAT_visSetIm);
     
     if strcmp(obsMode, 'time-varying')
-      extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, [], false);
+      eAO_visSetIm.applyLight = false;
+      extraOuts.hO = visSetIm(gPlot, obsPlot, 'k', 0, eAO_visSetIm);
     end
     
     if need_light && gPlot.dim == 3
@@ -462,8 +524,8 @@ for i = istart:length(tau)
 end
 
 endTime = cputime;
-if quiet == 0;
-fprintf('Total execution time %g seconds\n', endTime - startTime);
+if ~quiet;
+  fprintf('Total execution time %g seconds\n', endTime - startTime);
 end
 end
 

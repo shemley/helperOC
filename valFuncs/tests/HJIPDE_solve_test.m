@@ -400,4 +400,56 @@ if strcmp(whatTest, 'stopConverge')
   extraArgs.deleteLastPlot = true;
   data = HJIPDE_solve(data0, tau, schemeData, 'zero', extraArgs);
 end
+
+%% Low memory mode
+if strcmp(whatTest, 'low_memory')
+  obstacles = zeros([size(data0) length(tau)]);
+  for i = 1:length(tau)
+    obstacles(:,:,:,i) = shapeCylinder(g, 3, [1.5; 1.5; 0], i/length(tau)*R);
+  end
+  extraArgs.obstacles = obstacles;  
+  extraArgs.quiet = true;
+  
+  tic
+  data_normal = HJIPDE_solve(data0, tau, schemeData, 'zero', extraArgs);
+  fprintf('Normal mode time: %f seconds\n', toc)
+  
+  extraArgs.low_memory = true;
+  tic
+  data_low_mem = HJIPDE_solve(data0, tau, schemeData, 'zero', extraArgs);
+  fprintf('Low memory mode time: %f seconds\n', toc)
+  
+  error = max(abs(data_normal(:) - data_low_mem(:)));
+  fprintf('Error = %f\n', error)
+end
+
+%% flip outputs in low memory mode
+if strcmp(whatTest, 'flip_output')
+  obstacles = zeros([size(data0) length(tau)]);
+  for i = 1:length(tau)
+    obstacles(:,:,:,i) = shapeCylinder(g, 3, [1.5; 1.5; 0], i/length(tau)*R);
+  end
+  extraArgs.obstacles = obstacles;  
+  extraArgs.quiet = true;
+  
+  tic
+  data_normal = HJIPDE_solve(data0, tau, schemeData, 'zero', extraArgs);
+  fprintf('Normal mode time: %f seconds\n', toc)
+  
+  extraArgs.flip_output = true;
+  extraArgs.low_memory = true;
+  tic
+  data_low_mem = HJIPDE_solve(data0, tau, schemeData, 'zero', extraArgs);
+  fprintf('Low memory mode time: %f seconds\n', toc)
+  data_low_mem = flip(data_low_mem, 4);
+  
+  error = max(abs(data_normal(:) - data_low_mem(:)));
+  fprintf('Error = %f\n', error)
+  
+  figure
+  subplot(1,2,1)
+  visSetIm(g, data_normal);
+  subplot(1,2,2)
+  visSetIm(g, data_low_mem);
+end
 end

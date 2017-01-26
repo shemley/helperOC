@@ -71,7 +71,7 @@ for i = 1:length(dims)
   for j = 1:dims(i)
     if rand < 0.8
       g.bdry{j} = @addGhostPeriodic;
-      g.max(j) = g.max(j) * (1 - 1/g.N(j));
+      g.max(j) = (g.max(j)-g.min(j)) * (1 - 1/g.N(j));
     else
       g.bdry{j} = @addGhostExtrapolate;
     end

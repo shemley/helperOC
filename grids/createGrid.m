@@ -26,12 +26,20 @@ if nargin < 5
 end
 
 %% Input checks
-if ~isvector(grid_min) || ~isvector(grid_max)
-  error('grid_min and grid_max must both be vectors!')
+if isscalar(N)
+  N = N*ones(size(grid_min));
+end
+
+if ~isvector(grid_min) || ~isvector(grid_max) || ~isvector(N)
+  error('grid_min, grid_max, N must all be vectors!')
 end
 
 if numel(grid_min) ~= numel(grid_max)
   error('grid min and grid_max must have the same number of elements!')
+end
+
+if numel(grid_min) ~= numel(N)
+  error('grid min, grid_max, and N must have the same number of elements!')
 end
 
 if ~iscolumn(grid_min)
@@ -56,7 +64,7 @@ g.bdry = cell(g.dim, 1);
 for i = 1:length(g.bdry)
   if any(i == pdDims)
     g.bdry{i} = @addGhostPeriodic;
-    g.max(i) = g.max(i) * (1 - 1/g.N(i));
+    g.max(i) = g.min(i) + (g.max(i) - g.min(i)) * (1 - 1/g.N(i));
   else
     g.bdry{i} = @addGhostExtrapolate;
   end

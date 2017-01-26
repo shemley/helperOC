@@ -18,12 +18,16 @@ end
 
 % Dimensionality of grid
 gShift.dim = gIn.dim;
+gShift.bdry = gIn.bdry;
+gShift.dx = gIn.dx;
+gShift.N = gIn.N;
 
 %% Shift the grid
 gShift.xs = cell(gShift.dim, 1);
 gShift.vs = cell(gShift.dim, 1);
 gShift.min = zeros(gShift.dim, 1);
 gShift.max = zeros(gShift.dim, 1);
+
 for i = 1:length(shiftAmount)
   gShift.xs{i} = gIn.xs{i} + shiftAmount(i);
   gShift.min(i) = min(gShift.xs{i}(:));

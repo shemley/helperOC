@@ -112,26 +112,33 @@ function [gOut, dataOut] = projSingle(g, data, dims, xs, NOut, process)
 % See proj_test.m
 
 %% Create ouptut grid by keeping dimensions that we are not collapsing
-dims = logical(dims);
-gOut.dim = nnz(~dims);
-gOut.min = g.min(~dims);
-gOut.max = g.max(~dims);
-gOut.bdry = g.bdry(~dims);
-
-if numel(NOut) == 1
-  gOut.N = NOut*ones(gOut.dim, 1);
+if isempty(g)
+  if ~ischar(xs) || (~strcmp(xs, 'max') && ~strcmp(xs, 'min'))
+    error('Must perform min or max projection when not specifying grid!')
+  end
+  
 else
-  gOut.N = NOut;
-end
-
-% Process the grid to populate the remaining fields if necessary
-if process
-  gOut = processGrid(gOut);
-end
-
-% Only compute the grid if value function is not requested
-if nargout < 2
-  return
+  dims = logical(dims);
+  gOut.dim = nnz(~dims);
+  gOut.min = g.min(~dims);
+  gOut.max = g.max(~dims);
+  gOut.bdry = g.bdry(~dims);
+  
+  if numel(NOut) == 1
+    gOut.N = NOut*ones(gOut.dim, 1);
+  else
+    gOut.N = NOut;
+  end
+  
+  % Process the grid to populate the remaining fields if necessary
+  if process
+    gOut = processGrid(gOut);
+  end
+  
+  % Only compute the grid if value function is not requested
+  if nargout < 2
+    return
+  end
 end
 
 %% 'min' or 'max'
@@ -162,8 +169,22 @@ eval_pt = cell(g.dim, 1);
 xsi = 1;
 for i = 1:g.dim
   if dims(i)
+    % If this dimension is periodic, wrap the input point to the correct period
+    if isfield(g, 'bdry') && isequal(g.bdry{i}, @addGhostPeriodic)
+      period = max(g.vs{i}) - min(g.vs{i});
+      
+      while xs(xsi) > max(g.vs{i})
+        xs(xsi) = xs(xsi) - period;
+      end
+      
+      while xs(xsi) < min(g.vs{i})
+        xs(xsi) = xs(xsi) + period;
+      end
+    end
+    
     eval_pt{i} = xs(xsi);
     xsi = xsi + 1;
+    
   else
     eval_pt{i} = g.vs{i};
   end
@@ -174,5 +195,5 @@ temp = interpn(g.vs{:}, data, eval_pt{:});
 dataOut = squeeze(temp);
 
 % interpn(g.vs{1}, g.vs{3}, dataOut, gOut.xs{1}, gOut.xs{2})
-dataOut = interpn(g.vs{~dims}, dataOut, gOut.xs{:}); 
+dataOut = interpn(g.vs{~dims}, dataOut, gOut.xs{:});
 end

@@ -1,4 +1,4 @@
-function PlaneCAvoid_test(which_test, gN)
+function compute_safety_set(gN)
 % PlaneCAvoid_test()
 %     Tests the PlaneCAvoid class; requires the level set toolbox, which can be
 %     found at https://www.cs.ubc.ca/~mitchell/ToolboxLS/
@@ -23,11 +23,7 @@ tau = 0:dt:tMax;
 %% Vehicle parameters
 % Maximum turn rate (rad/s)
 wMaxA = 1;
-if strcmp(which_test, 'straight')
-  wMaxB = 0;
-else
-  wMaxB = 1;
-end
+wMaxB = 1;
 
 % Speed range (m/s)
 vRangeA = [5 5];
@@ -45,12 +41,7 @@ data0 = shapeCylinder(g, 3, [0;0;0], targetR);
 sD.grid = g;
 sD.dynSys = PlaneCAvoid([0;0;0], wMaxA, vRangeA, wMaxB, vRangeB, dMaxA, dMaxB);
 sD.uMode = 'max';
-
-if strcmp(which_test, 'cooperative')
-  sD.dMode = 'max';
-else
-  sD.dMode = 'min';
-end
+sD.dMode = 'min';
 
 extraArgs.visualize = true;
 extraArgs.deleteLastPlot = true;
@@ -60,6 +51,6 @@ extraArgs.keepLast = true;
 safety_set.data = HJIPDE_solve(data0, tau, sD, 'zero', extraArgs);
 safety_set.g = g;
 safety_set.deriv = computeGradients(g, safety_set.data);
-save(sprintf('%s_%s.mat', mfilename, which_test), 'safety_set', '-v7.3')
+save('safety_set.mat', 'safety_set', '-v7.3')
 
 end

@@ -2,3 +2,4 @@
 tests/dubins_liveness_3D/testData.mat
 tests/spheres2346D.mat
 *.mat
+*.png
