@@ -22,7 +22,7 @@ classdef Quad10D < DynSys
   end
   
   methods
-    function obj = Quad10D(x, uMin, uMax, dMax, dMin, dims)
+    function obj = Quad10D(x, uMin, uMax, dMin, dMax, dims)
       % obj = Quad10D(x, uMin, uMax)
       %     Constructor for a 10D quadrotor
       %
