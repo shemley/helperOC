@@ -26,7 +26,7 @@ det{5} = deriv{3};
 %% Optimal disturbance (vB, wB, d3)
 dMin = [obj.vRangeB(1); -obj.wMaxB; nan; nan; -obj.dMaxA(2) - obj.dMaxB(2)];
 dMax = [obj.vRangeB(2); obj.wMaxB; nan; nan; obj.dMaxA(2) + obj.dMaxB(2)];
-dOpt = cell(obj.nu, 1);
+dOpt = cell(obj.nd, 1);
 
 for i = [1 2 5]
   if strcmp(dMode, 'max')
