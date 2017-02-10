@@ -1,5 +1,5 @@
 function dOpt = optDstb(obj, t, x, deriv, dMode, ~)
-% uOpt = optCtrl(obj, t, y, deriv, uMode, dMode, MIEdims)
+% dOpt = optDstb(obj, t, x, deriv, dMode, ~)
 
 %% Input processing
 if nargin < 5
@@ -49,7 +49,7 @@ dOpt{3}(denom == 0) = 0;
 dOpt{4} = s*(obj.dMaxA(1) + obj.dMaxB(1)) * deriv{2} ./ denom;
 dOpt{4}(denom == 0) = 0;
 
-%% If input x and deriv were not cells, then convert uOpt back to vector
+%% If input x and deriv were not cells, then convert dOpt back to vector
 if convert_back
   dOpt = cell2mat(dOpt);
 end
