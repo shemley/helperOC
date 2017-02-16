@@ -58,7 +58,7 @@ dtSmall = (tau(2) - tau(1))/subSamples;
 % maxIter = 1.25*tauLength;
 
 % Initialize trajectory
-traj = nan(3, tauLength);
+traj = nan(g.dim, tauLength);
 traj(:,1) = dynSys.x;
 tEarliest = 1;
 
