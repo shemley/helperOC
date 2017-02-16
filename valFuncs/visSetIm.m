@@ -101,6 +101,8 @@ function h = visSetIm_single(g, data, color, level, extraArgs)
 
 sliceDim = g.dim; % Slice last dimension by default
 applyLight = true; % Add cam light by default
+LineStyle = '-';
+LineWidth = 1;
 
 if isfield(extraArgs, 'sliceDim')
   sliceDim = extraArgs.sliceDim;
@@ -108,6 +110,14 @@ end
 
 if isfield(extraArgs, 'applyLight')
   applyLight = extraArgs.applyLight;
+end
+
+if isfield(extraArgs, 'LineStyle')
+  LineStyle = extraArgs.LineStyle;
+end
+
+if isfield(extraArgs, 'LineWidth')
+  LineWidth = extraArgs.LineWidth;
 end
 
 switch g.dim
@@ -125,6 +135,8 @@ switch g.dim
       [~, h] = contour(g.xs{1}, g.xs{2}, data, level, 'color', color);
     end
     
+    h.LineStyle = LineStyle;
+    h.LineWidth = LineWidth;
   case 3
     h = visSetIm3D(g, data, color, level, applyLight);
     
