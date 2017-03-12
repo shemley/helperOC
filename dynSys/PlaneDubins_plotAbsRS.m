@@ -11,7 +11,7 @@ function h = PlaneDubins_plotAbsRS(vehicle, g, data, extraArgs)
 % Output:
 %     h - handle of plotted object
 
-if nargin < 2
+if nargin < 4
   extraArgs.LineStyle = ':';
   extraArgs.LineWidth = 2;
 end

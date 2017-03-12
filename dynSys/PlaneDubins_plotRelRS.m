@@ -12,7 +12,7 @@ function h = PlaneDubins_plotRelRS(evader, pursuer, g, data, extraArgs)
 % Output:
 %     h - handle of plotted object
 
-if nargin < 2
+if nargin < 5
   extraArgs.LineStyle = '--';
   extraArgs.LineWidth = 2;
 end
