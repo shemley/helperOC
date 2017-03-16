@@ -14,18 +14,36 @@ function dx = dynamics(obj, ~, x, u, d)
 %              uMin <= [u1; u2; u3] <= uMax
 %              dMin <= [d1; d2; d3] <= dMax
 
+if nargin < 5
+  d = {0; 0; 0};
+end
+
 if nargin < 6
   dims = obj.dims;
 end
 
-if iscell(x)
-  dx = cell(length(dims), 1);
-  
-  for i = 1:length(dims)
-    dx{i} = dynamics_cell_helper(obj, x, u, d, dims, dims(i));
-  end
-else
-  error('Not implemented yet...')
+convert2num = false;
+if ~iscell(x)
+  x = num2cell(x);
+  convert2num = true;
+end
+
+if ~iscell(u)
+  u = num2cell(u);
+end
+
+if ~iscell(d)
+  d = num2cell(d);
+end
+
+dx = cell(length(dims), 1);
+
+for i = 1:length(dims)
+  dx{i} = dynamics_cell_helper(obj, x, u, d, dims, dims(i));
+end
+
+if convert2num
+  dx = cell2mat(dx);
 end
 
 end
@@ -33,7 +51,7 @@ end
 function dx = dynamics_cell_helper(obj, x, u, d, dims, dim)
 switch dim
   case 1
-    dx = x{dims==2} - d{1};
+    dx = x{dims==2} + d{1};
   case 2
     dx = obj.g * tan(x{dims==3});
   case 3
@@ -41,7 +59,7 @@ switch dim
   case 4
     dx = -obj.d0 * x{dims==3} + obj.n0 * u{1};
   case 5
-    dx = x{dims==5} - d{2};
+    dx = x{dims==5} + d{2};
   case 6
     dx = obj.g * tan(x{dims==7});
   case 7
@@ -49,7 +67,7 @@ switch dim
   case 8
     dx = -obj.d0 * x{dims==7} + obj.n0 * u{2};
   case 9
-    dx = x{dims==10} - d{3};
+    dx = x{dims==10} + d{3};
   case 10
     dx = obj.kT * u{3} - obj.g;
     
