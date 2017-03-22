@@ -14,6 +14,7 @@ function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
 %     .uMode        - specifies whether the control u aims to minimize or
 %                     maximize the value function
 %     .visualize    - set to true to visualize results
+%     .fig_num:   List if you want to plot on a specific figure number
 %     .projDim      - set the dimensions that should be projected away when
 %                     visualizing
 %     .fig_filename - specifies the file name for saving the visualizations
@@ -38,7 +39,11 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   showDims = find(extraArgs.projDim);
   hideDims = ~extraArgs.projDim;
   
-  figure
+  if isfield(extraArgs,'fig_num')
+    f = figure(extraArgs.fig_num);
+  else
+    f = figure;
+  end
 end
 
 if isfield(extraArgs, 'subSamples')

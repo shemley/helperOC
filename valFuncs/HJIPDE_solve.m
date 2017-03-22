@@ -203,8 +203,10 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   % Initialize the figure for visualization  
   if isfield(extraArgs,'fig_num')
     f = figure(extraArgs.fig_num);
+    clf
   else
     f = figure;
+    clf
   end
   hold on
   need_light = true;
