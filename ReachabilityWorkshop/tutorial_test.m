@@ -21,7 +21,7 @@ function tutorial_test()
 %     dMode = 'min' <-- opposite of uMode
 %     minWith = 'zero' <-- Tube (not set)
 %     compTraj = false <-- no trajectory
-% 6. Change to a Forward Reachable Set (FRS)
+% 6. Change to a Forward Reachable Tube (FRT)
 %     add schemeData.tMode = 'forward'
 %     note: now having uMode = 'max' essentially says "see how far I can
 %     reach"
@@ -31,7 +31,7 @@ function tutorial_test()
 %     HJIextraArgs.obstacles = obstacles;
 
 %% Should we compute the trajectory?
-compTraj = false;
+compTraj = true;
 
 %% Grid
 grid_min = [-5; -5; -pi]; % Lower corner of computation domain
