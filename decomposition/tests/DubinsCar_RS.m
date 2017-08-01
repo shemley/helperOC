@@ -2,21 +2,25 @@ function DubinsCar_RS(gN, whichComputation)
 % DubinsCar_RS()
 %     Compares reachable set/tube computation using direct and decomposition
 %     methods
+%
+% Inputs:
+%     gN - Number of grid points per dimension 
 
+%% Default parameters
 if nargin < 1
   gN = 25;
 end
 
 if nargin < 2
-  whichComputation = 'dstb_coupled';
+  whichComputation = 'intersect_set';
 end
 
-%% Common parameters
+%% Problem parameters common to both subsystems
 small = 0.01;
 targetLower = [-0.5; -0.5; -inf];
 targetUpper = [0.5; 0.5; inf];   
     
-% Grid
+% 3D Grid
 gMin = [-1.25; -1.25; 0];
 gMax = [1.25; 1.25; 2*pi];
 tube = false;
@@ -33,12 +37,19 @@ wMax = 1;
 speed = 1;
 dMax = [0; 0; 0];
 
-%% Dynamical systems and subsystems
-XTdims = [1 3];
-YTdims = [2 3];
-target_inside = true;
+%% Dynamical system and subsystem dimensions
+XTdims = [1 3]; % (x, \theta) dimensions
+YTdims = [2 3]; % (y, \theta) dimensions
+
+% Set to true to specify the target set to be between targetLower and 
+% targetUpper
+target_inside = true; 
+
+% Reconstruction type: set to 'max' to take intersection of back projections,
+% 'min' to take the union of back projections
 constrType = 'max';
 
+%% Computing the reachable set
 switch whichComputation
   case 'intersect_set'
 
@@ -72,7 +83,7 @@ switch whichComputation
     error('Unknown computation!')
 end
 
-tau = 0:dt:tMax;
+tau = 0:dt:tMax; % Times at which to obtain the solution
 
 %% Grids and initial conditions
 g = createGrid(gMin, gMax, gN, 3);
@@ -92,13 +103,14 @@ if ~target_inside
 end
 
 %% Additional solver parameters
-sD_full.grid = g;
-sD_XT.grid = gXT;
-sD_YT.grid = gYT;
+sD_full.grid = g; % 3D grid
+sD_XT.grid = gXT; % (x, \theta) grid
+sD_YT.grid = gYT; % (y, \theta) grid
 
-sD_full.dynSys = DubinsCar([0;0;0], wMax, speed, dMax);
-sD_XT.dynSys = DubinsCar([0;0;0], wMax, speed, dMax, XTdims);
-sD_YT.dynSys = DubinsCar([0;0;0], wMax, speed, dMax, YTdims);
+% Dynamical systems
+sD_full.dynSys = DubinsCar([0;0;0], wMax, speed, dMax); % 3D system
+sD_XT.dynSys = DubinsCar([0;0;0], wMax, speed, dMax, XTdims); % (x, \theta)
+sD_YT.dynSys = DubinsCar([0;0;0], wMax, speed, dMax, YTdims); % (y, \theta)
 
 sD_full.uMode = uMode;
 sD_XT.uMode = uMode;
