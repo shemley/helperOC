@@ -38,7 +38,7 @@ else
 end
 
 %% Create grids based on the bound grid
-gs = cell(size(bounds_grid{1})-1);
+gs = cell(size(bounds_grid{1})-(size(bounds_grid{1})>1));
 
 ii = cell(g.dim, 1);
 for i = 1:numel(gs)

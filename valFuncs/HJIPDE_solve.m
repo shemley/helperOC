@@ -14,6 +14,8 @@ function [data, tau, extraOuts] = ...
 %                  .grid: grid (required!)
 %   minWith    - set to 'zero' to do min with zero
 %              - set to 'none' to compute reachable set (not tube)
+%              - set to 'minOverTime' to do min over time
+%              - set to 'maxOverTime' to do max over time
 %   extraArgs  - this structure can be used to leverage other additional
 %                functionalities within this function. Its subfields are:
 %     .obstacles:  a single obstacle or a list of obstacles with time
@@ -351,9 +353,14 @@ for i = istart:length(tau)
       keyboard
     end
     
-    % Min with zero
-    if strcmp(minWith, 'zero')
+    
+    %Tube Computations
+    if strcmp(minWith, 'zero') % Min with zero
       y = min(y, yLast);
+    elseif strcmp(minWith, 'minOverTime') %Min with Time
+      y = min(y,data0(:));
+    elseif strcmp(minWith, 'maxOverTime')
+      y = max(y,data0(:));
     end
     
     % Min with targets
