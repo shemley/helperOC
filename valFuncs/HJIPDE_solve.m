@@ -14,8 +14,9 @@ function [data, tau, extraOuts] = ...
 %                  .grid: grid (required!)
 %   minWith    - set to 'zero' to do min with zero
 %              - set to 'none' to compute reachable set (not tube)
-%              - set to 'minOverTime' to do min over time
-%              - set to 'maxOverTime' to do max over time
+%              - set to 'minVOverTime' to do min with previous data
+%              - set to 'minVWithTarget' to do min with original data
+%              - set to 'maxVOverTime' to do max over time
 %   extraArgs  - this structure can be used to leverage other additional
 %                functionalities within this function. Its subfields are:
 %     .obstacles:  a single obstacle or a list of obstacles with time
@@ -251,7 +252,7 @@ if isfield(extraArgs, 'stopConverge')
 end
 
 %% SchemeFunc and SchemeData
-schemeFunc = @termLaxFriedrichs;
+    schemeFunc = @termLaxFriedrichs;
 % Extract accuracy parameter o/w set default accuracy
 accuracy = 'veryHigh';
 if isfield(schemeData, 'accuracy')
@@ -262,6 +263,14 @@ end
 dissType = 'global';
 [schemeData.dissFunc, integratorFunc, schemeData.derivFunc] = ...
   getNumericalFuncs(dissType, accuracy);
+
+if strcmp(minWith, 'zeroTEST')
+    schemeFunc = @termRestrictUpdate;
+    schemeData.innerFunc = @termLaxFriedrichs;
+    schemeData.innerData = schemeData;
+    schemeData.innerData = schemeData;
+    schemeData.positive = 0;
+end
 
 %% Time integration
 integratorOptions = odeCFLset('factorCFL', 0.8, 'singleStep', 'on');
@@ -338,7 +347,7 @@ for i = istart:length(tau)
   %% Main integration loop to get to the next tau(i)
   while tNow < tau(i) - small
     % Save previous data if needed
-    if strcmp(minWith, 'zero')
+    if strcmp(minWith, 'zero') || strcmp(minWith, 'time')
       yLast = y;
     end
     
@@ -357,7 +366,9 @@ for i = istart:length(tau)
     %Tube Computations
     if strcmp(minWith, 'zero') % Min with zero
       y = min(y, yLast);
-    elseif strcmp(minWith, 'minOverTime') %Min with Time
+    elseif strcmp(minWith, 'time') %Min over Time
+        y = min(y, yLast);
+    elseif strcmp(minWith, 'data0') %Min with data0
       y = min(y,data0(:));
     elseif strcmp(minWith, 'maxOverTime')
       y = max(y,data0(:));
