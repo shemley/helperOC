@@ -17,6 +17,11 @@ function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
 %     .fig_num:   List if you want to plot on a specific figure number
 %     .projDim      - set the dimensions that should be projected away when
 %                     visualizing
+%     .distDim      - set the dimensions of the disturbance to project to
+%                     the same plot. Used to visualize an adversary
+%     .targetData   - data to plot target region
+%     .targetCenter - center of target region
+%     .obstacleData - data to plot obstacles
 %     .fig_filename - specifies the file name for saving the visualizations
 
 if nargin < 5
@@ -25,11 +30,16 @@ end
 
 % Default parameters
 uMode = 'min';
+dMode = 'max';
 visualize = false;
 subSamples = 4;
 
 if isfield(extraArgs, 'uMode')
   uMode = extraArgs.uMode;
+end
+
+if isfield(extraArgs, 'dMode')
+  dMode = extraArgs.dMode;
 end
 
 % Visualization
@@ -38,6 +48,31 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   
   showDims = find(extraArgs.projDim);
   hideDims = ~extraArgs.projDim;
+  
+  if isfield(extraArgs,'distDim')
+    distShowDims = find(extraArgs.distDim);
+    distHideDims = ~extraArgs.distDim;
+  end
+  
+  if isfield(extraArgs,'targetData')
+    targetData = extraArgs.targetData;
+  end
+  
+  if isfield(extraArgs,'targetCenter')
+    targetCenter = extraArgs.targetCenter;
+  else
+    targetCenter = zeros(size(projDim));
+  end
+  
+  if isfield(extraArgs,'obstacleData')
+    obstacleData = extraArgs.obstacleData;
+    
+    if length(size(obstacleData)) == g.dim
+        timeVaryingObs = false;
+    else
+        timeVaryingObs = true;
+    end
+  end
   
   if isfield(extraArgs,'fig_num')
     f = figure(extraArgs.fig_num);
@@ -80,10 +115,36 @@ while iter <= tauLength
   
   % Visualize BRS corresponding to current trajectory point
   if visualize
-    plot(traj(showDims(1), iter), traj(showDims(2), iter), 'k.')
+    plot(traj(showDims(1), iter), traj(showDims(2), iter), 'b.','MarkerSize',15)
     hold on
     [g2D, data2D] = proj(g, BRS_at_t, hideDims, traj(hideDims,iter));
-    visSetIm(g2D, data2D);
+    visSetIm(g2D, data2D,'b');
+    
+    % Show adversary (disturbance) if one exists and capture set
+    if exist('distShowDims','var')
+        plot(traj(distShowDims(1), iter), traj(distShowDims(2), iter), 'r^','MarkerFaceColor','r')
+        [distG2D, distData2D] = proj(g, BRS_at_t, distHideDims, traj(distHideDims,iter));
+        visSetIm(distG2D, distData2D,'r');
+        
+        % plot obstacle
+        if exist('obstacleData','var')
+            if timeVaryingObs
+                obs2use = obstacleData(clns{:},iter);
+            else
+                obs2use = obstacleData;
+            end
+            
+            [obsG2D, obsData2D] = proj(g, obs2use, hideDims, traj(hideDims,iter));
+            visSetIm(obsG2D, obsData2D,'k');
+        end
+    end
+    
+    % Show target if it exists (in agent's coordinates
+    if exist('targetData','var')
+        [targetG2D, targetData2D] = proj(g, targetData, hideDims, targetCenter(hideDims));
+        visSetIm(targetG2D, targetData2D,'g');
+    end
+    
     tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(iter), tau(tEarliest));
     title(tStr)
     drawnow
@@ -105,7 +166,8 @@ while iter <= tauLength
   for j = 1:subSamples
     deriv = eval_u(g, Deriv, dynSys.x);
     u = dynSys.optCtrl(tau(tEarliest), dynSys.x, deriv, uMode);
-    dynSys.updateState(u, dtSmall, dynSys.x);
+    d = dynSys.optDstb(tau(tEarliest), dynSys.x, deriv, dMode); % add disturbance
+    dynSys.updateState(u, dtSmall, dynSys.x, d);
   end
   
   % Record new point on nominal trajectory

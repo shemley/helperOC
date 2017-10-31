@@ -46,7 +46,8 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 %% target set
 R = 1;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
-data0 = shapeCylinder(g, [3 4], [0; 0; 0; 0], R); % target set for attacker is a circle, ignore defender position
+targetCenter = [0; 0; 0; 0];
+data0 = shapeCylinder(g, [3 4], targetCenter, R); % target set for attacker is a circle, ignore defender position
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
 %% time vector
@@ -99,12 +100,32 @@ schemeData.dMode = dMode;
 
 %% If you have obstacles, compute them here
 % avoid set
-% obstacles = avoidSetMultiAgent(grid, nagents, ndims, radii, ignoreDims)
-nagents = 2;
-ndims = 2;
+obstacleType = 'open loop';
 captureRadius = 1;
-ignoreDims = [];
-obstacles = avoidSetMultiAgent(g,captureRadius,nagents,ndims,ignoreDims);
+
+if strcmp(obstacleType,'open loop')
+    advInitPos = [-2; 0]; % adversary initial position
+    obsCenter  = [advInitPos; 0; 0];   
+    obstacles  = zeros(N(1),N(2),N(3),N(4),length(tau));
+    for i = 1:length(tau)
+        % open loop obstacle is cylinder in the attacker dimensions
+        % (1 and 2) centered at defender initial position
+        obstacles(:,:,:,:,i) =...
+            shapeCylinder(g, [3 4], obsCenter, captureRadius + dMax*tau(i));
+    end
+    
+elseif strcmp(obstacleType,'closed loop')
+    % obstacles = avoidSetMultiAgent(grid, nagents, ndims, radii, ignoreDims)
+    nagents = 2;
+    ndims = 2;
+
+    ignoreDims = [];
+    obstacles = avoidSetMultiAgent(g,captureRadius,nagents,ndims,ignoreDims);
+else
+    error('Incorrect obstacle type!')
+end
+
+% Set obstacles
 HJIextraArgs.obstacles = obstacles;
 
 %% Compute value function
@@ -123,11 +144,18 @@ if compTraj
   pause
   
   %set the initial state
-  xinit = [3, 3, 3, -3];
-  
+  if exist('advInitPos','var')
+    if iscolumn(advInitPos)
+      advInitPos = advInitPos';
+    end
+    xinit = [-1, 1, advInitPos];
+  else
+    xinit = [-1, 1, -2.5, 1];
+  end
+    
   %check if this initial state is in the BRS/BRT
   %value = eval_u(g, data, x)
-  value = eval_u(g,data(:,:,:,end),xinit);
+  value = eval_u(g,data(:,:,:,:,end),xinit);
   
   if value <= 0 %if initial state is in BRS/BRT
     % find optimal trajectory
@@ -135,14 +163,27 @@ if compTraj
     dynSys.x = xinit; %set initial state of the dubins car
 
     TrajextraArgs.uMode = uMode; %set if control wants to min or max
+    TrajextraArgs.dMode = dMode; %set if disturbance wants to min or max
     TrajextraArgs.visualize = true; %show plot
     TrajextraArgs.fig_num = 2; %figure number
     
     %we want to see the first two dimensions (x and y)
-    TrajextraArgs.projDim = [1 1 0]; 
+    agentDim = [1 1 0 0];
+    TrajextraArgs.projDim = agentDim;
+    
+    % Show disturbance
+    distDim = [0 0 1 1];
+    TrajextraArgs.distDim = distDim;
+    
+    % Show target set
+    TrajextraArgs.targetData = data0;  
+    TrajextraArgs.targetCenter = targetCenter;   
+    
+    % Show obstacle set
+    TrajextraArgs.obstacleData = obstacles;
     
     %flip data time points so we start from the beginning of time
-    dataTraj = flip(data,4);
+    dataTraj = flip(data,5);
     
     % [traj, traj_tau] = ...
     % computeOptTraj(g, data, tau, dynSys, extraArgs)
