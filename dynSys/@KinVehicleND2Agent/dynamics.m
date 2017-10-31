@@ -5,8 +5,8 @@ function dx = dynamics(obj, ~, x, u, d, ~)
 %    \dot{x}_2 = u_y
 %        u = (u_x, u_y)
 %    Agent 2:
-%    \dot{x}_1 = d_x
-%    \dot{x}_2 = d_y
+%    \dot{x}_3 = d_x
+%    \dot{x}_4 = d_y
 %        d = (d_x, d_y)
 
 dx = [u;d];

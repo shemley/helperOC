@@ -21,7 +21,7 @@ else
 end
 
 %% Optimal control
-dOpt = deriv;
+dOpt = deriv((obj.nu+1):end);
 denom = 0;
 if iscell(deriv)
   for i = 1:obj.nd
