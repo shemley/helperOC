@@ -46,7 +46,7 @@ if isfield(extraArgs, 'deleteLastPlot')
 end
 
 save_png = false;
-if isfield(extraArgs, 'fig_filename');
+if isfield(extraArgs, 'fig_filename')
   save_png = true;
   fig_filename = extraArgs.fig_filename;
 end
