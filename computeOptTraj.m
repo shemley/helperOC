@@ -13,6 +13,8 @@ function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
 %   extraArgs
 %     .uMode        - specifies whether the control u aims to minimize or
 %                     maximize the value function
+%     .trajPoints   - specifies the number of points to compute along the
+%                     trajectory (defaults to length(tau))
 %     .visualize    - set to true to visualize results
 %     .fig_num:   List if you want to plot on a specific figure number
 %     .projDim      - set the dimensions that should be projected away when
@@ -31,6 +33,7 @@ end
 % Default parameters
 uMode = 'min';
 dMode = 'max';
+trajPoints = length(tau);
 visualize = false;
 subSamples = 4;
 
@@ -40,6 +43,10 @@ end
 
 if isfield(extraArgs, 'dMode')
   dMode = extraArgs.dMode;
+end
+
+if isfield(extraArgs, 'trajPoints')
+  trajPoints = extraArgs.trajPoints;
 end
 
 % Visualization
@@ -102,7 +109,7 @@ traj = nan(g.dim, tauLength);
 traj(:,1) = dynSys.x;
 tEarliest = 1;
 
-while iter <= tauLength 
+while iter <= trajPoints 
   % Determine the earliest time that the current state is in the reachable set
   % Binary search
   upper = tauLength;
@@ -156,7 +163,7 @@ while iter <= tauLength
     hold off
   end
   
-  if tEarliest == tauLength
+  if (tEarliest == tauLength) || (iter == trajPoints)
     % Trajectory has entered the target
     break
   end
