@@ -54,7 +54,7 @@ while iter <= tauLength
     tEarliest = find_earliest_BRS_ind(g, data, traj(:,iter), upper, lower);
     
     % BRS at current time
-    BRS_at_t = data(clns{:}, tEarliest);
+    BRS_at_t = data(clns{:}, iter); % used to use tEarliest here, but iter shows the tube at the current time
     
     plot(traj(showDims(1), iter), traj(showDims(2), iter), 'b.','MarkerSize',15)
     hold on
@@ -88,7 +88,6 @@ while iter <= tauLength
     tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(iter), tau(tEarliest));
     title(tStr)
     drawnow
-    
     hold off        
     
     if isfield(extraArgs, 'fig_filename')

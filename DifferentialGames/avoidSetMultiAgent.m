@@ -77,7 +77,7 @@ end
 
 %---------------------------------------------------------------------------
 % Signed distance function calculation.
-data = -inf(grid.shape);
+data = inf(grid.shape);
 % Loop through agents
 for i = 1:(nagents-1)
   for j = 2:(nagents)
@@ -91,7 +91,7 @@ for i = 1:(nagents-1)
         end
     end
     pairData = sqrt(pairData) - radius; % find points within radius (>0)
-    data = max(data,pairData); % take maximum of data and latest pair
+    data = min(data,pairData); % take minimum of data and latest pair
   end
 end
 

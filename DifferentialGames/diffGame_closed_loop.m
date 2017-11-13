@@ -1,4 +1,4 @@
-function diffGame_test()
+function diffGame_closed_loop()
 % 1. Run Backward Reachable Set (BRS) with a goal
 %     uMode = 'min' <-- goal
 %     minWith = 'none' <-- Set (not tube)
@@ -100,37 +100,19 @@ schemeData.dMode = dMode;
 
 %% If you have obstacles, compute them here
 % avoid set
-obstacleType = 'open loop';
+% obstacles = avoidSetMultiAgent(grid, nagents, ndims, radii, ignoreDims)
 captureRadius = 1;
-
-if strcmp(obstacleType,'open loop')
-    advInitPos = [-2; 0]; % adversary initial position
-    obsCenter  = [advInitPos; 0; 0];   
-    obstacles  = zeros(N(1),N(2),N(3),N(4),length(tau));
-    for i = 1:length(tau)
-        % open loop obstacle is cylinder in the attacker dimensions
-        % (1 and 2) centered at defender initial position
-        obstacles(:,:,:,:,i) =...
-            shapeCylinder(g, [3 4], obsCenter, captureRadius + dMax*tau(i));
-    end
-    
-elseif strcmp(obstacleType,'closed loop')
-    % obstacles = avoidSetMultiAgent(grid, nagents, ndims, radii, ignoreDims)
-    nagents = 2;
-    ndims = 2;
-
-    ignoreDims = [];
-    obstacles = avoidSetMultiAgent(g,captureRadius,nagents,ndims,ignoreDims);
-else
-    error('Incorrect obstacle type!')
-end
+nagents = 2;
+ndims = 2;
+ignoreDims = [];
+obstacles = avoidSetMultiAgent(g,captureRadius,nagents,ndims,ignoreDims);
 
 % Set obstacles
 HJIextraArgs.obstacles = obstacles;
 
 %% Compute value function
 
-HJIextraArgs.visualize = true; %show plot
+HJIextraArgs.visualize = false; %show plot
 HJIextraArgs.fig_num = 1; %set figure number
 HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 
@@ -139,19 +121,13 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 [data, tau2, ~] = ...
   HJIPDE_solve(data0, tau, schemeData, minWith, HJIextraArgs);
 
+% save open_loop_test_square.mat
+
 %% Compute optimal trajectory from some initial state
 if compTraj
   pause
   
-  %set the initial state
-  if exist('advInitPos','var')
-    if iscolumn(advInitPos)
-      advInitPos = advInitPos';
-    end
-    xinit = [-1, 1, advInitPos];
-  else
-    xinit = [-1, 1, -2.5, 1];
-  end
+  xinit = [-1, 1, -2, 3];
     
   %check if this initial state is in the BRS/BRT
   %value = eval_u(g, data, x)
