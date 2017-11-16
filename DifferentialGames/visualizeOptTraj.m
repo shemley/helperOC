@@ -5,6 +5,12 @@ function visualizeOptTraj(g, data, traj, tau, extraArgs)
 showDims = find(extraArgs.projDim);
 hideDims = ~extraArgs.projDim;
 
+if isfield(extraArgs,'trajDim')
+    trajShowDims = find(extraArgs.trajDim);
+else
+    trajShowDims = true(size(extraArgs.projDim));
+end
+
 if isfield(extraArgs,'distDim')
     distShowDims = find(extraArgs.distDim);
     distHideDims = ~extraArgs.distDim;
@@ -17,7 +23,7 @@ end
 if isfield(extraArgs,'targetCenter')
     targetCenter = extraArgs.targetCenter;
 else
-    targetCenter = zeros(size(projDim));
+    targetCenter = zeros(size(extraArgs.projDim));
 end
 
 if isfield(extraArgs,'obstacleData')
@@ -30,11 +36,13 @@ if isfield(extraArgs,'obstacleData')
     end
 end
 
-if isfield(extraArgs,'fig_num')
-    f = figure(extraArgs.fig_num);
-else
-    f = figure;
-end
+% if isfield(extraArgs,'fig_num')
+%     f = figure(extraArgs.fig_num);
+% else
+%     f = figure;
+% end
+
+f = gcf;
 
 % Grid params
 clns = repmat({':'}, 1, g.dim);
@@ -51,21 +59,21 @@ while iter <= tauLength
     upper = tauLength;
     lower = tEarliest;
     
-    tEarliest = find_earliest_BRS_ind(g, data, traj(:,iter), upper, lower);
+    tEarliest = find_earliest_BRS_ind(g, data, traj(trajShowDims,iter), upper, lower);
     
     % BRS at current time
     BRS_at_t = data(clns{:}, iter); % used to use tEarliest here, but iter shows the tube at the current time
     
     plot(traj(showDims(1), iter), traj(showDims(2), iter), 'b.','MarkerSize',15)
     hold on
-    [g2D, data2D] = proj(g, BRS_at_t, hideDims, traj(hideDims,iter));
+    [g2D, data2D] = proj(g, BRS_at_t, hideDims(trajShowDims), traj(hideDims(trajShowDims),iter));
     visSetIm(g2D, data2D,'b');
     
     % Show adversary (disturbance) if one exists and capture set
     if exist('distShowDims','var')
         plot(traj(distShowDims(1), iter), traj(distShowDims(2), iter), 'r^','MarkerFaceColor','r')
-        [distG2D, distData2D] = proj(g, BRS_at_t, distHideDims, traj(distHideDims,iter));
-        visSetIm(distG2D, distData2D,'r');
+%         [distG2D, distData2D] = proj(g, BRS_at_t, distHideDims(trajShowDims), traj(distHideDims(trajShowDims),iter));
+%         visSetIm(distG2D, distData2D,'r');
         
         % plot obstacle
         if exist('obstacleData','var')
@@ -74,14 +82,14 @@ while iter <= tauLength
             else
                 obs2use = obstacleData;
             end
-            [obsG2D, obsData2D] = proj(g, obs2use, hideDims, traj(hideDims,iter));
+            [obsG2D, obsData2D] = proj(g, obs2use, hideDims(trajShowDims), traj(hideDims(trajShowDims),iter));
             visSetIm(obsG2D, obsData2D,'k');
         end
     end
     
     % Show target if it exists (in agent's coordinates
     if exist('targetData','var')
-        [targetG2D, targetData2D] = proj(g, targetData, hideDims, targetCenter(hideDims));
+        [targetG2D, targetData2D] = proj(g, targetData, hideDims(trajShowDims), targetCenter(hideDims(trajShowDims)));
         visSetIm(targetG2D, targetData2D,'g');
     end
     
