@@ -163,7 +163,14 @@ while iter <= trajPoints
     hold off
   end
   
-  if (tEarliest == tauLength) || (iter == trajPoints)
+  % If this is the last point, break the loop to avoid re-computing the
+  % gradients and increment the iterator to include the current point
+  if (iter == trajPoints)
+    iter = iter + 1;
+    break
+  end
+      
+  if (tEarliest == tauLength)
     % Trajectory has entered the target
     break
   end

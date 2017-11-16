@@ -62,10 +62,10 @@ traj.value = nan(size(tau));
 traj.tau = tau;
 
 % BRS data
-BRSdata = nan([size(OL.targetData),length(tau)]);
+BRSdata = nan([OL.g.shape,length(tau)]);
 
 % obstacle data
-obsData = nan(size(OL.g.shape));
+obsData = nan([OL.g.shape,length(tau)]);
 
 %% Setup solver arguments
 HJIextraArgs = OL.HJIextraArgs;
@@ -74,7 +74,12 @@ TrajextraArgs.trajPoints = 2;
 
 %% Set initial conditions
 jointPos = agentInfo.initPos;
+attackerPos = jointPos(1:2,1);
+defenderPos = jointPos(3:4,1);
 traj.x(:,1) = jointPos;
+
+% Stop if value function is within a small tolerance of zero
+small = 1e-4;
 
 %% Compute MPC trajectory
 for iter = 1:length(tau)
@@ -89,7 +94,7 @@ for iter = 1:length(tau)
     obsVal  = eval_u(CL.g, CL.obstacles, jointPos);
 
     % Stop if in target or obstacle
-    if (iter == length(tau)) || (stopVal <= 0) || (obsVal <= 0)
+    if (iter == length(tau)) || (stopVal < small) || (obsVal < small)
         break
     end
 
@@ -98,7 +103,8 @@ for iter = 1:length(tau)
     CL.dynSys.x = jointPos; % set initial state for CL calc
 
     % If execution horizon has ended, re-compute OL solution
-    if rem(iter-1,horizonSteps) == 0
+    currentStep = rem(iter-1,horizonSteps) + 1; % current step of the horizon
+    if  currentStep == 1 
 %         tauCurrent = tau(iter:(iter+numHorizonSteps-1));
         tauCurrent = tau(iter:end);
                 
@@ -107,6 +113,9 @@ for iter = 1:length(tau)
         obstaclesCurrent = ...
            getOpenLoopAvoidSet(OL.g, obsCenter, agentInfo.captureRadius,...
                                agentInfo.dMax,tauCurrent);
+                           
+        % flip obstacle time points so we start from the beginning of time
+        obsTrajCurrent = flip(obstaclesCurrent,ndims(obstaclesCurrent));
 
         % Set obstacles
         HJIextraArgs.obstacles = obstaclesCurrent;    
@@ -120,11 +129,21 @@ for iter = 1:length(tau)
         dataTrajCurrent = flip(dataCurrent,ndims(dataCurrent));
     end
     
+    % Store BRS data (forward in time)
+    BRSdata(OL.clns{:},iter) = dataTrajCurrent(OL.clns{:},currentStep);
+    
+    % Store obstacle data (forward in time)
+    obsData(OL.clns{:},iter) = obsTrajCurrent(OL.clns{:},currentStep);
+    
     % Update defender position using CL trajectory
     % [traj, traj_tau] = ...
     % computeOptTraj(g, data, tau, dynSys, extraArgs)
     [trajCL_current, trajCL_tau_current] = ...
       computeOptTraj(CL.g, CL.dataTraj, tau, CL.dynSys, TrajextraArgs);
+  
+    if length(trajCL_tau_current) < 2
+        a = 1;
+    end
   
     % Update defender position
     defenderPos = trajCL_current(3:4,2);    
@@ -145,6 +164,17 @@ for iter = 1:length(tau)
     traj.x(:,iter+1) = jointPos;
 end
 
+% Remove unused positions in trajectory data
 traj.x = traj.x(:,1:iter);
 traj.value = traj.value(1:iter);
 traj.tau = tau(1:iter);
+
+% Remove unused positions in BRSdata and obstacles
+BRSdata = BRSdata(OL.clns{:},1:iter);
+obsData = obsData(OL.clns{:},1:iter);
+
+% flip BRS data time points so we start from end of time
+BRSdata = flip(BRSdata,ndims(BRSdata));
+
+% flip obstacle time points so we start from the end of time
+obsData = flip(obsData,ndims(obsData));

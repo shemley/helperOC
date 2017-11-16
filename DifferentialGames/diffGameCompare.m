@@ -1,4 +1,4 @@
-function [OL,CL,MPC]= diffGameCompare(icGrid, agentInfo, horizons, tMax, visualize, dataCL)
+function [OL,CL,MPC]= diffGameCompare(icGrid, agentInfo, horizons, tMax, visualize, savedCL)
 % Runs solvers for closed loop, open loop, and MPC approaches for a
 % differential reach-avoid game between two single integrators for time
 % tMax and an execution horizon of horizon (for MPC). 
@@ -83,9 +83,31 @@ end
 
 % Allow stores CL data to be input to avoid re-computing
 if nargin < 6
+    % Compute and save results
     computeCL = true;
+    saveCLresult = true;
 else
+    % Use input data provided that it is for the same parameters
     computeCL = false;
+    saveCLresult = false;
+    
+    % Check that the parameters are provided along with the input CL data
+    if isfield(savedCL,'uMax') && isfield(savedCL,'dMax') && ...
+       isfield(savedCL,'captureRadius') && isfield(savedCL,'tMax')
+        
+        % Check that CL data matches the input parameters
+        if savedCL.uMax == uMax && savedCL.dMax == dMax &&...
+           savedCL.captureRadius == captureRadius && ...
+           savedCL.tMax == tMax
+    
+            % Use saved data
+            dataCL = savedCL.data;
+        else
+           error('Saved CL data doesn''t match input parameters.')
+        end
+    else
+      error('Saved CL data must be in a struct with corresponding parameters.')
+    end
 end
 
 
@@ -112,6 +134,13 @@ minWith = 'zero';
 TrajextraArgs.uMode = uMode; %set if control wants to min or max
 TrajextraArgs.dMode = dMode; %set if disturbance wants to min or max
 TrajextraArgs.visualize = false; % do not plot
+
+% Extra trajectory arguments for computing only one step of trajectory
+TrajextraArgsOneStep = TrajextraArgs;
+TrajextraArgsOneStep.trajPoints = 2;
+
+% Tolerance for arrival in target/obstacle sets
+small = 1e-4;
 
 %% Closed Loop (CL) parameters
 % Colons for taking time slices of data (e.g. data(clns,time))
@@ -180,12 +209,46 @@ HJIextraArgsOL.visualize = false; %show plot
 %% Compute CL value function
 
 if computeCL
+    % Print message
+    tic
+    fprintf('Computing Closed Loop solution...\n')
+    
     % %[data, tau, extraOuts] = ...
     % % HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
     [dataCL, tauCL, ~] = ...
       HJIPDE_solve(targetDataCL, tau, schemeDataCL, minWith, HJIextraArgsCL);
+  
+    % Print message
+    fprintf('Closed Loop solution computed.\t%.2f seconds\n',toc)
+else    
+    % else dataCL given as input  
+    % Print message
+    fprintf('Using pre-computed Closed Loop solution.\n')
 end
-% else dataCL given as input
+
+
+% Save CL results and parameters in struct if requested
+if saveCLresult
+    % Print message
+    tic
+    fprintf('Saving Closed Loop solution...\n')
+    
+    % Build struct
+    savedCL.data = dataCL;
+    savedCL.uMax = uMax;
+    savedCL.dMax = dMax;
+    savedCL.captureRadius = captureRadius;
+    savedCL.tMax = tMax;
+    savedCL.N = N;
+    
+    clFilename = sprintf(...
+       './DifferentialGames/CLresults_u%.1f_d%.1f_cr%.1f_t%.1f_n%d.mat',...
+                                   uMax,dMax,captureRadius,tMax,N(1));
+    save(clFilename,'savedCL')
+    
+    % Print message
+    fprintf('Closed Loop solution saved.\t%.2f seconds\n',toc)
+end
   
 % For trajectory computation:
 %flip data time points so we start from the beginning of time
@@ -212,6 +275,41 @@ CLin.HJIextraArgs = HJIextraArgsCL;
 CLin.TrajextraArgs = TrajextraArgs;
 CLin.clns = clnsCL;
 
+%% Set up output structs
+% Closed loop
+CL.AX = AX;
+CL.AY = AY;
+CL.DX = DX;
+CL.DY = DY;
+CL.Values = nan(size(AX));
+CL.trajectories = cell(size(AX));
+CL.data = dataCL;
+CL.obstacles = obstaclesCL;
+CL.targetData = targetDataCL;
+
+% Open loop
+OL.AX = AX;
+OL.AY = AY;
+OL.DX = DX;
+OL.DY = DY;
+OL.Values = nan(size(AX));
+OL.trajectories = cell(size(AX));
+OL.data = cell(size(AX));
+OL.obstacles = cell(size(AX));
+OL.targetData = targetDataOL;
+
+% MPC
+MPC.horizons = horizons;
+MPC.AX = AX;
+MPC.AY = AY;
+MPC.DX = DX;
+MPC.DY = DY;
+MPC.Values = nan([size(AX),length(horizons)]);
+MPC.trajectories = cell([size(AX),length(horizons)]);
+MPC.data = cell([size(AX),length(horizons)]);
+MPC.obstacles = cell([size(AX),length(horizons)]);
+MPC.targetData = targetDataOL;
+
 %% Loop through Defender positions
 for idx = 1:size(DX,3)
   for idy = 1:size(DY,4)
@@ -227,10 +325,18 @@ for idx = 1:size(DX,3)
     HJIextraArgsOL.obstacles = obstaclesOL;
 
     %% Compute OL value function
+    % Print message
+    tic
+    fprintf('Computing Open Loop solution for [dx,dy] = [%.2f,%.2f]\n',...
+            defenderPos(1),defenderPos(2))
+    
     %[data, tau, extraOuts] = ...
     % HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
     [dataOL, tauOL, ~] = ...
       HJIPDE_solve(targetDataOL, tau, schemeDataOL, minWith, HJIextraArgsOL);
+  
+    % Print message
+    fprintf('Open Loop solution computed.\t%.2f seconds\n',toc)
       
     % For trajectory computation:
     %flip data time points so we start from the beginning of time
@@ -246,11 +352,16 @@ for idx = 1:size(DX,3)
         % Set agentInfo for MPC solver
         agentInfo.initPos = initPos;
         
+        % Print message
+        fprintf(['Computing trajectories for initial position:\n',...
+                 '[ax,ay,dx,dy] = [%.2f,%.2f,%.2f,%.2f]\n'],...
+                 initPos(1),initPos(2),initPos(3),initPos(4));
         
         %% Compute OL optimal trajectory
-        %value = eval_u(g, data, x)
-        valueOL = eval_u(gOL,dataOL(clnsOL{:},length(tau)),attackerPos);
-
+        % Print message
+        tic
+        fprintf('Computing Open Loop trajectory...\n')
+        
         % find optimal trajectory
         dynSysOL.x = attackerPos; %set initial state
 
@@ -258,10 +369,60 @@ for idx = 1:size(DX,3)
         % computeOptTraj(g, data, tau, dynSys, extraArgs)
         [trajOL, traj_tauOL] = ...
           computeOptTraj(gOL, dataTrajOL, tauOL, dynSysOL, TrajextraArgs);
+        
+        % Set up trajectory output
+        traj.x = nan(4,length(traj_tauOL));
+        traj.value = nan(size(traj_tauOL));
+        traj.tau = traj_tauOL;
+        
+        % Calculate OL defender and value trajectories
+        newDefenderPos = defenderPos;
+        for iter = 1:length(traj_tauOL)
+            dynSysCL.x = [trajOL(:,iter); newDefenderPos]; %set initial state
+            traj.x(:,iter) = dynSysCL.x; % store joint state in trajectory
+            traj.value(iter) =... % calculate value
+               eval_u(gCL,dataCL(clnsCL{:},iter),dynSysCL.x); 
+            obsVal  = eval_u(gCL, obstaclesCL, dynSysCL.x); % calc obstacle value
+            
+            if (iter == length(traj_tauOL)) ||...
+               (traj.value(iter) < small) || (obsVal < small)
+                break
+            end
+           
+            % Update defender position using CL trajectory
+            % [traj, traj_tau] = ...
+            % computeOptTraj(g, data, tau, dynSys, extraArgs)
+            [trajCL_current, trajCL_tau_current] = ...
+                computeOptTraj(gCL, dataTrajCL, tau, dynSysCL,...
+                               TrajextraArgsOneStep);    
+                           
+            if length(trajCL_tau_current) < 2
+                a = 1;
+            end
+                           
+            % Update defender position
+            newDefenderPos = trajCL_current(3:4,2);  
+        end
+        
+        % Store OL trajectory data in output struct
+        OL.trajectories{iax,iay,idx,idy} = traj; 
+        
+        % Store other OL data in struct
+        OL.Values(iax,iay,idx,idy) = traj.value(end);
+        OL.data{iax,iay,idx,idy} = dataOL; 
+        OL.obstacles{iax,iay,idx,idy} = obstaclesOL;
+        
+        % Print message
+        fprintf('Open Loop trajectory computed.\t%.2f seconds\n',toc)
 
         %% Compute CL optimal trajectory
-        %value = eval_u(g, data, x)
-        valueCL = eval_u(gCL,dataCL(clnsCL{:},length(tau)),initPos);
+        % Print message
+        tic
+        fprintf('Computing Closed Loop trajectory...\n')
+        
+        % Store CL value at the beginning
+        CL.Values(iax,iay,idx,idy) = ...
+            eval_u(gCL,dataCL(clnsCL{:},length(tau)),initPos);
 
         % find optimal trajectory
         dynSysCL.x = initPos; %set initial state
@@ -269,14 +430,45 @@ for idx = 1:size(DX,3)
         % [traj, traj_tau] = ...
          % computeOptTraj(g, data, tau, dynSys, extraArgs)
         [trajCL, traj_tauCL] = ...
-          computeOptTraj(gCL, dataTrajCL, tauCL, dynSysCL, TrajextraArgs);
+          computeOptTraj(gCL, dataTrajCL, tau, dynSysCL, TrajextraArgs);
+      
+        % Set up trajectory output
+        traj.x = trajCL;
+        traj.value = nan(size(traj_tauCL));
+        traj.tau = traj_tauCL;
+      
+        % Calculate CL values
+        for iter = 1:length(traj_tauCL)
+            traj.value(iter) =... % calculate value
+               eval_u(gCL,dataCL(clnsCL{:},iter),trajCL(:,iter)); 
+        end
+        
+        % Store CL trajectory data in output struct
+        CL.trajectories{iax,iay,idx,idy} = traj;
 
+        % Print message
+        fprintf('Closed Loop trajectory computed.\t%.2f seconds\n',toc)
+        
         %% Loop through horizons
         for ihz = 1:length(numHorizonSteps)            
           %% Compute MPC optimal trajectory  
-          [trajMPC, BRSdata, obsData] = ...
+          % Print message
+          tic
+          fprintf('Computing MPC trajectory for horizon of %.2f...\n',horizons(ihz))          
+          
+          [trajMPC, dataMPC, obsMPC] = ...
             diffGameSolveMPC(agentInfo,numHorizonSteps(ihz),tau,CLin,OLin);
           % diffGameSolveMPC(agentInfo, horizonSteps, tau, CL, OL, mapData)
+          
+          % Store MPC data in output struct
+          MPC.Values(iax,iay,idx,idy,ihz) = trajMPC.value(end);
+          MPC.trajectories{iax,iay,idx,idy,ihz} = trajMPC;
+          MPC.data{iax,iay,idx,idy,ihz} = dataMPC;
+          MPC.obstacles{iax,iay,idx,idy,ihz} = obsMPC;
+          
+          % Print message
+          fprintf(['MPC trajectory computed for horizon of ',...
+                   '%.2f.\t%.2f seconds\n'],horizons(ihz),toc)
         end
       end
     end
@@ -284,15 +476,15 @@ for idx = 1:size(DX,3)
 end
         
 %% Visualize
-if visualize
-    figure;
-    plot(trajCL(1,:),trajCL(2,:),'b.-')
-    hold on
-    plot(trajCL(3,:),trajCL(4,:),'c.-')
-    plot(trajOL(1,:),trajOL(2,:),'k.-')
-    plot(trajMPC(1,:),trajMPC(2,:),'r.-')
-    plot(trajMPC(3,:),trajMPC(4,:),'m.-')
-    hold off
-end
+% if visualize
+%     figure;
+%     plot(trajCL(1,:),trajCL(2,:),'b.-')
+%     hold on
+%     plot(trajCL(3,:),trajCL(4,:),'c.-')
+%     plot(trajOL(1,:),trajOL(2,:),'k.-')
+%     plot(trajMPC(1,:),trajMPC(2,:),'r.-')
+%     plot(trajMPC(3,:),trajMPC(4,:),'m.-')
+%     hold off
+% end
 
 end
