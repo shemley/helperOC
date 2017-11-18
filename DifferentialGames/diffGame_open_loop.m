@@ -100,7 +100,7 @@ dMax = 1; % defender max speed
 
 advInitPos = [-2; 3]; % adversary initial position
 obsCenter  = advInitPos;   
-obstacles = getOpenLoopAvoidSet(g,obsCenter,captureRadius,dMax,tau);
+obstacles = getOpenLoopAvoidSet(g,obsCenter,captureRadius,dMax,tau,'SOS');
 
 % Set obstacles
 HJIextraArgs.obstacles = obstacles;
