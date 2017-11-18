@@ -157,7 +157,7 @@ targetDataCL = ...  % target set for attacker is a circle, ignore defender
     shapeCylinder(gCL,ignoreDims,[targetCenter;targetCenter],targetRadius); 
 
 % Define dynamic system
-% obj = KinVehicleND2Agent(x, Max, speed, dMax)
+% obj = KinVehicleND2Agent(x, uMax, dMax)
 dynSysCL = KinVehicleND2Agent([0,0,0,0], uMax, dMax);
 
 % Put grid and dynamic systems into schemeData
