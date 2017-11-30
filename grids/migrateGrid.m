@@ -18,7 +18,7 @@ end
 
 dataDims = numDims(dataOld);
 if dataDims == gOld.dim
-  dataNew = migrateGridSingle(gOld, dataOld, gNew);
+  dataNew = migrateGridSingle(gOld, dataOld, gNew, filler);
   
 elseif dataDims == gOld.dim + 1
   numTimeSteps = size(dataOld, dataDims);
