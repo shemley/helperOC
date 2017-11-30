@@ -12,6 +12,6 @@ phi(4) = x(4);
 
 % Distance features
 phi(5) = norm(x(1:2) - x(3:4),2); % Distance between agents
-phi(6) = norm(x(1:2)); % Distance of attacker to target
+phi(6) = norm(x(1:2),2); % Distance of attacker to target
 
 phi = 1./(1+exp(-phi));

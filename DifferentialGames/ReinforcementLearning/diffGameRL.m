@@ -22,6 +22,7 @@ maxIters = 100000;
 % Learning parameters
 discount = 0.7;
 lambda = 0.7;
+regularizationRate = 0.01;
 
 while numIter <= maxIters
     
@@ -50,14 +51,14 @@ while numIter <= maxIters
         
         % Get attacker control (using epsilon-greedy)
         if rand(1) > epsilon
-            u = getRLAction(dynSys.x, w, dynSys, 'min');
+            u = getRLAction(dynSys.x, w, dt, dynSys, 'min');
         else
             u = uLegal(:,randi(length(uLegal),1));
         end
             
         % Get defender control (using epsilon-greedy)
         if rand(1) > epsilon
-            d = getRLAction(dynSys.x, w, dynSys, 'max');
+            d = getRLAction(dynSys.x, w, dt, dynSys, 'max');
         else
             d = dLegal(:,randi(length(dLegal),1));
         end
@@ -94,7 +95,8 @@ while numIter <= maxIters
             
             % Update weights
             targetVal = (r + discount*nextVal);
-            w = w - eta*(thisVal - targetVal)*featureVec;
+            regTerm = regularizationRate*w;
+            w = w - eta*((thisVal - targetVal)*featureVec + regTerm);
             
             % Update next value with target decayed by a factor of lambda
             nextVal = lambda*targetVal;

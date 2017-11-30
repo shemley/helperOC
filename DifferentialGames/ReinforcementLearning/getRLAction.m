@@ -1,4 +1,4 @@
-function action = getRLAction(x, w, dynSys, mode)
+function action = getRLAction(x, w, dt, dynSys, mode)
 % function to get action based on RL value. Uses a 1 level depth limited
 % search with eval function. 
 % Mode determines whose turn it is first. 'min' means attacker first, 'max'
@@ -13,8 +13,8 @@ else
 end
 
 % State updates for each player
-attackerUpdate = @(v,u) v + [u; 0; 0];
-defenderUpdate = @(v,d) v + [0; 0; d];
+attackerUpdate = @(v,u) v + dt*[u; 0; 0];
+defenderUpdate = @(v,d) v + dt*[0; 0; d];
 
 if attacker
     % Attacker first
@@ -41,7 +41,7 @@ upper = inf;
 % Loop through all possible actions
 for i = 1:size(firstActions,2)
     firstAct = firstActions(:,i);
-    newX = firstUpdate(x,firstAct);
+    firstX = firstUpdate(x,firstAct);
     
     if attacker
         maxVal = -inf;
@@ -51,21 +51,23 @@ for i = 1:size(firstActions,2)
     
     for j = 1:size(secondActions,2)
         secondAct = secondActions(:,j);
-        newX = secondUpdate(newX,secondAct);
+        secondX = secondUpdate(firstX,secondAct);
         
-        newValue = getRLValue(newX, w);
+        newValue = getRLValue(secondX, w);
         
         if attacker
             if newValue > upper
+                maxVal = upper;
                 break;
             elseif newValue > maxVal
                 maxVal = newValue;
             end  
         else
             if newValue < lower
+                minVal = lower;
                 break;
-            elseif newValue > minVal
-                minVal = newVal;
+            elseif newValue < minVal
+                minVal = newValue;
             end
         end            
     end
@@ -82,3 +84,10 @@ for i = 1:size(firstActions,2)
         end
     end        
 end
+
+% % Delete
+% if attacker
+%     fprintf('Attacker Value = %g\n',upper)
+% else
+%     fprintf('Defender Value = %g\n',lower)
+% end
