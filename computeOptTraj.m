@@ -13,6 +13,9 @@ function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
 %   extraArgs
 %     .uMode        - specifies whether the control u aims to minimize or
 %                     maximize the value function
+%     .dMode        - specifies whether the disturbance aims to minimize or
+%                     maximize the value function (no disturbance if
+%                     omitted)
 %     .trajPoints   - specifies the number of points to compute along the
 %                     trajectory (defaults to length(tau))
 %     .visualize    - set to true to visualize results
@@ -32,7 +35,6 @@ end
 
 % Default parameters
 uMode = 'min';
-dMode = 'max';
 trajPoints = length(tau);
 visualize = false;
 subSamples = 4;
@@ -68,7 +70,7 @@ if isfield(extraArgs, 'visualize') && extraArgs.visualize
   if isfield(extraArgs,'targetCenter')
     targetCenter = extraArgs.targetCenter;
   else
-    targetCenter = zeros(size(projDim));
+    targetCenter = zeros(size(extraArgs.projDim));
   end
   
   if isfield(extraArgs,'obstacleData')
@@ -99,7 +101,7 @@ if any(diff(tau)) < 0
 end
 
 % Time parameters
-iter = 1;
+iter = 2; % start at point 2 because point 1 is stored initially
 tauLength = length(tau);
 dtSmall = (tau(2) - tau(1))/subSamples;
 % maxIter = 1.25*tauLength;
@@ -163,12 +165,12 @@ while iter <= trajPoints
     hold off
   end
   
-  % If this is the last point, break the loop to avoid re-computing the
-  % gradients and increment the iterator to include the current point
-  if (iter == trajPoints)
-    iter = iter + 1;
-    break
-  end
+%   % If this is the last point, break the loop to avoid re-computing the
+%   % gradients and increment the iterator to include the current point
+%   if (iter == trajPoints)
+%     iter = iter + 1;
+%     break
+%   end
       
   if (tEarliest == tauLength)
     % Trajectory has entered the target
@@ -180,13 +182,19 @@ while iter <= trajPoints
   for j = 1:subSamples
     deriv = eval_u(g, Deriv, dynSys.x);
     u = dynSys.optCtrl(tau(tEarliest), dynSys.x, deriv, uMode);
-    d = dynSys.optDstb(tau(tEarliest), dynSys.x, deriv, dMode); % add disturbance
+    
+    if isfield(extraArgs, 'dMode')
+        d = dynSys.optDstb(tau(tEarliest), dynSys.x, deriv, dMode); % add disturbance
+    else
+        d = [];
+    end
+    
     dynSys.updateState(u, dtSmall, dynSys.x, d);
   end
   
   % Record new point on nominal trajectory
-  iter = iter + 1;
   traj(:,iter) = dynSys.x;
+  iter = iter + 1;
 end
 
 % Delete unused indices
