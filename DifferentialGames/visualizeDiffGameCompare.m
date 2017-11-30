@@ -72,21 +72,19 @@ dataTrajCL = flip(CL.data,ndims(CL.data));
 
 
 % Animate results in 3 plot figure
+f = figure('units','normalized','outerposition',[0 0 1 1]); 
 
 for iax = 1%:size(CL.AX,1)
   for iay = 1%:size(CL.AY,2)
     for idx = 1%:size(CL.DX,3)
       for idy = 1%:size(CL.DY,4)
-        f = figure('units','normalized','outerposition',[0 0 1 1]); 
         subplot(1,3,1); title('CL');
         subplot(1,3,2); title('OL');
         subplot(1,3,3); title('MPC');
         
-        % Flip OL and MPC data
+        % Flip OL data
         dataTrajOL = flip(OL.data{iax,iay,idx,idy},...
                                ndims(OL.data{iax,iay,idx,idy}));
-        dataTrajMPC = flip(MPC.data{iax,iay,idx,idy},...
-                               ndims(MPC.data{iax,iay,idx,idy}));
         
         % animate CL
         subplot(1,3,1)
@@ -113,9 +111,12 @@ for iax = 1%:size(CL.AX,1)
         subplot(1,3,3)
         axis square
         axis equal        
-        for ihz = length(MPC.horizons):-1:1            
+        for ihz = length(MPC.horizons):-1:1         
+            % Flip MPC data
+            dataTrajMPC = flip(MPC.data{iax,iay,idx,idy,ihz},...
+                            ndims(MPC.data{iax,iay,idx,idy,ihz}));
             extraArgsMPC.obstacleData = flip(MPC.obstacles{iax,iay,idx,idy,ihz},...
-                                     ndims(MPC.obstacles{iax,iay,idx,idy,ihz}));
+                            ndims(MPC.obstacles{iax,iay,idx,idy,ihz}));
             visualizeOptTraj(gOL,dataTrajMPC,...
                 MPC.trajectories{iax,iay,idx,idy,ihz}.x,...
                 MPC.trajectories{iax,iay,idx,idy,ihz}.tau, extraArgsMPC)
