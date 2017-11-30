@@ -50,6 +50,12 @@ targetCenter = [0; 0; 0; 0];
 data0 = shapeCylinder(g, [3 4], targetCenter, R); % target set for attacker is a circle, ignore defender position
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
+% Add static obstacles for defender to target region
+statObsDef = shapeRectangleByCenter(g,[0;0;-1.5;0],[Inf;Inf;1;1]);
+data0 = min(data0,statObsDef);
+
+
+
 %% time vector
 t0 = 0;
 tMax = 2;
@@ -107,6 +113,13 @@ ndims = 2;
 ignoreDims = [];
 obstacles = avoidSetMultiAgent(g,captureRadius,nagents,ndims,ignoreDims);
 
+% static obstacles
+statObsAtt = shapeRectangleByCenter(g,[0;0;-1.5;0],[1;1;Inf;Inf]);
+
+
+statObs = statObsAtt;%min(statObsAtt,statObsDef);
+obstacles = min(obstacles,statObs);
+
 % Set obstacles
 HJIextraArgs.obstacles = obstacles;
 
@@ -127,7 +140,7 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 if compTraj
   pause
   
-  xinit = [-1, 1, -2, 3];
+  xinit = [-2.25, -0.5, -0.75, 1];
     
   %check if this initial state is in the BRS/BRT
   %value = eval_u(g, data, x)
@@ -140,7 +153,7 @@ if compTraj
 
     TrajextraArgs.uMode = uMode; %set if control wants to min or max
     TrajextraArgs.dMode = dMode; %set if disturbance wants to min or max
-    TrajextraArgs.visualize = true; %show plot
+    TrajextraArgs.visualize = false; %show plot
     TrajextraArgs.fig_num = 2; %figure number
     
     %we want to see the first two dimensions (x and y)

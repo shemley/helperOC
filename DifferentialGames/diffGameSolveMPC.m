@@ -1,5 +1,5 @@
 function [traj, BRSdata, obsData] = ...
-    diffGameSolveMPC(agentInfo, horizonSteps, tau, CL, OL, mapData)
+    diffGameSolveMPC(agentInfo, horizonSteps, tau, CL, OL, map)
 % Runs solver for MPC approaches for a differential reach-avoid game 
 % between two single integrators for time tau and an execution horizon of 
 % horizonSteps (number of steps before re-planning). The attacker plans an
@@ -39,6 +39,8 @@ function [traj, BRSdata, obsData] = ...
 %       .HJIextraArgs - arguments to pass into HJI solver
 %       .TrajextraArgs - arguments to pass into computeTrajectory
 %       .clns - cell array of colons
+%       .obstacleType - 'ideal' or 'SOS' for circular or square avoid
+%                       region
 %   mapData - information about the map. E.g. static obstacles
 %       .obstacles - static obstacles on the map (in OL state space)
 %
@@ -52,9 +54,21 @@ function [traj, BRSdata, obsData] = ...
 
 %% Process input
 if nargin < 6
-    mapData.obstacles = inf(OL.g.shape);
+    map = getMap('no_obstacle');
 end
 
+if isfield(map,'obstacles')
+    staticObstacles = true;
+else
+    staticObstacles = false;
+end
+
+if isfield(OL,'obstacleType')
+    obstacleType = OL.obstacleType;
+else
+    obstacleType = 'ideal';
+end
+    
 %% Setup output variables
 % trajectory struct
 traj.x = nan(length(agentInfo.initPos),length(tau));
@@ -86,7 +100,7 @@ for iter = 1:length(tau)
     
     % Find (CL) value of current position at current time
     traj.value(iter) = ...
-        eval_u(CL.g, CL.data(CL.clns{:},iter), jointPos);
+        eval_u(CL.g, CL.dataTraj(CL.clns{:},iter), jointPos);
 
     % check if this state is in the BRS/BRT or in an obstacle
     % value = eval_u(g, data, x)
@@ -105,15 +119,23 @@ for iter = 1:length(tau)
     % If execution horizon has ended, re-compute OL solution
     currentStep = rem(iter-1,horizonSteps) + 1; % current step of the horizon
     if  currentStep == 1 
-%         tauCurrent = tau(iter:(iter+numHorizonSteps-1));
+%         tauCurrent = tau(iter:(iter+horizonSteps-1));
         tauCurrent = tau(iter:end);
                 
         % Set up new obstacle for current state
         obsCenter = defenderPos;   
         obstaclesCurrent = ...
            getOpenLoopAvoidSet(OL.g, obsCenter, agentInfo.captureRadius,...
-                               agentInfo.dMax,tauCurrent);
-                           
+                               agentInfo.dMax,tauCurrent,obstacleType);
+       
+        % add static obstacles to obstaclesCurrent
+        if staticObstacles
+            for iObs = 1:length(tauCurrent)
+                obstaclesCurrent(OL.clns{:},iObs) = ...
+                    min(obstaclesCurrent(OL.clns{:},iObs), map.obstacles);                        
+            end
+        end
+            
         % flip obstacle time points so we start from the beginning of time
         obsTrajCurrent = flip(obstaclesCurrent,ndims(obstaclesCurrent));
 
@@ -140,10 +162,6 @@ for iter = 1:length(tau)
     % computeOptTraj(g, data, tau, dynSys, extraArgs)
     [trajCL_current, trajCL_tau_current] = ...
       computeOptTraj(CL.g, CL.dataTraj, tau, CL.dynSys, TrajextraArgs);
-  
-    if length(trajCL_tau_current) < 2
-        a = 1;
-    end
   
     % Update defender position
     defenderPos = trajCL_current(3:4,2);    

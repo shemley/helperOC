@@ -20,17 +20,20 @@ else
     f = figure(fig);
 end
 
+hold on
+
 % Plot grid
-% visGrid(map.g);
+visGrid(map.g);
 
 % Plot target set
 visSetIm(map.g, map.target.data, 'g');
 
 % Plot obstacles if present
 if isfield(map, 'obstacles')
-    visSetIm(map.g, map.obstacles, 'b');
+    visSetIm(map.g, map.obstacles, 'k');
 end
 
+hold off
 
 
 
