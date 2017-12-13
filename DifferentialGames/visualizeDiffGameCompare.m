@@ -2,9 +2,25 @@ function visualizeDiffGameCompare(OL,CL,MPC,gCL,gOL,extraArgs)
 % Function to visualize the output of the differential game comparison
 % function. Compares open loop, closed
 
+%Make video
+video = false;
+videoName = 'video';
+if isfield(extraArgs,'video')
+    video = extraArgs.video;
+end
+if isfield(extraArgs,'videoName')
+    videoName = extraArgs.videoName;
+end
+
 extraArgsCL = extraArgs;
 extraArgsOL = extraArgs;
 extraArgsMPC = extraArgs;
+
+% video name
+if video
+    extraArgsCL.videoName = [videoName,'CL'];
+    extraArgsOL.videoName = [videoName,'OL'];
+end
 
 % Dimensions to show in the plot
 showDims = [1 1 0 0]; 
@@ -72,22 +88,26 @@ dataTrajCL = flip(CL.data,ndims(CL.data));
 
 
 % Animate results in 3 plot figure
-f = figure('units','normalized','outerposition',[0 0 1 1]); 
+% f = figure('units','normalized','outerposition',[0 0 1 1]); 
+
+f1 = figure;
+f2 = figure;
+f3 = figure;
 
 for iax = 1%:size(CL.AX,1)
   for iay = 1%:size(CL.AY,2)
     for idx = 1%:size(CL.DX,3)
       for idy = 1%:size(CL.DY,4)
-        subplot(1,3,1); title('CL');
-        subplot(1,3,2); title('OL');
-        subplot(1,3,3); title('MPC');
+%         subplot(1,3,1); title('CL');
+%         subplot(1,3,2); title('OL');
+%         subplot(1,3,3); title('MPC');
         
         % Flip OL data
         dataTrajOL = flip(OL.data{iax,iay,idx,idy},...
                                ndims(OL.data{iax,iay,idx,idy}));
         
         % animate CL
-        subplot(1,3,1)
+        figure(f1)
         axis square
         axis equal        
         visualizeOptTraj(gCL,dataTrajCL,CL.trajectories{iax,iay,idx,idy}.x,...
@@ -98,7 +118,7 @@ for iax = 1%:size(CL.AX,1)
         extraArgsOL.obstacleData = flip(OL.obstacles{iax,iay,idx,idy},...
                                    ndims(OL.obstacles{iax,iay,idx,idy}));
         
-        subplot(1,3,2)
+        figure(f2)
         axis square
         axis equal        
         visualizeOptTraj(gOL,dataTrajOL,...
@@ -108,10 +128,14 @@ for iax = 1%:size(CL.AX,1)
         
         % animate MPC for each horizon
         
-        subplot(1,3,3)
+        figure(f3)
         axis square
         axis equal        
-        for ihz = length(MPC.horizons):-1:1         
+        for ihz = length(MPC.horizons):-1:1      
+            if video
+                extraArgsMPC.videoName = sprintf('%s_%.2f',videoName,MPC.horizons(ihz));
+            end
+            
             % Flip MPC data
             dataTrajMPC = flip(MPC.data{iax,iay,idx,idy,ihz},...
                             ndims(MPC.data{iax,iay,idx,idy,ihz}));

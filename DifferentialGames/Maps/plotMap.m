@@ -23,7 +23,12 @@ end
 hold on
 
 % Plot grid
-visGrid(map.g);
+% visGrid(map.g);
+
+% Plot grid boundary
+bndryPoints = [map.grid_min, [map.grid_min(1); map.grid_max(2)],...
+             map.grid_max,[map.grid_max(1); map.grid_min(2)],map.grid_min];
+plot(bndryPoints(1,:),bndryPoints(2,:),'k--')
 
 % Plot target set
 visSetIm(map.g, map.target.data, 'g');

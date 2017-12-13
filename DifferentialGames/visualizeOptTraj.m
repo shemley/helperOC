@@ -1,6 +1,22 @@
 %% visualize optimal trajectory from data
 function visualizeOptTraj(g, data, traj, tau, extraArgs)
 
+video = false;
+videoName = 'video';
+if isfield(extraArgs,'video')
+    video = extraArgs.video;
+end
+if isfield(extraArgs,'videoName')
+    videoName = extraArgs.videoName;
+end
+
+if video
+   % Make video
+    v = VideoWriter(['./DifferentialGames/Videos/',videoName,'.avi']);
+    v.FrameRate = 10; % set frame rate
+    open(v); 
+end
+
 % Check extra args input
 showDims = find(extraArgs.projDim);
 hideDims = ~extraArgs.projDim;
@@ -57,12 +73,12 @@ while iter <= tauLength
     % Determine the earliest time that the current state is in the reachable set
     % Binary search
     upper = tauLength;
-    lower = tEarliest;
+    lower = 1;
     
     tEarliest = find_earliest_BRS_ind(g, data, traj(trajShowDims,iter), upper, lower);
     
     % BRS at current time
-    BRS_at_t = data(clns{:}, iter); % used to use tEarliest here, but iter shows the tube at the current time
+    BRS_at_t = data(clns{:}, tEarliest); % used to use tEarliest here, but iter shows the tube at the current time
     
     plot(traj(showDims(1), iter), traj(showDims(2), iter), 'b.','MarkerSize',15)
     hold on
@@ -93,10 +109,16 @@ while iter <= tauLength
         visSetIm(targetG2D, targetData2D,'g');
     end
     
-    tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(iter), tau(tEarliest));
+%     tStr = sprintf('t = %.3f; tEarliest = %.3f', tau(iter), tau(tEarliest));
+    tStr = sprintf('t = %.3f', tau(iter));
     title(tStr)
     drawnow
-    hold off        
+    hold off
+    
+    if video
+        frame = getframe(gcf);
+        writeVideo(v,frame);
+    end
     
     if isfield(extraArgs, 'fig_filename')
         export_fig(sprintf('%s%d', extraArgs.fig_filename, iter), '-png')

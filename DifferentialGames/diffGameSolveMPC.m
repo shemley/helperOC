@@ -1,4 +1,4 @@
-function [traj, BRSdata, obsData] = ...
+function [traj, BRSdata, obsData, compTime] = ...
     diffGameSolveMPC(agentInfo, horizonSteps, tau, CL, OL, map)
 % Runs solver for MPC approaches for a differential reach-avoid game 
 % between two single integrators for time tau and an execution horizon of 
@@ -81,6 +81,13 @@ BRSdata = nan([OL.g.shape,length(tau)]);
 % obstacle data
 obsData = nan([OL.g.shape,length(tau)]);
 
+numPlans = floor(length(tau)/horizonSteps);
+planNum = 1;
+firstPlan = true;
+compTime = zeros(numPlans,1);
+
+
+
 %% Setup solver arguments
 HJIextraArgs = OL.HJIextraArgs;
 TrajextraArgs = OL.TrajextraArgs;
@@ -97,10 +104,16 @@ small = 1e-4;
 
 %% Compute MPC trajectory
 for iter = 1:length(tau)
+         
+    % Determine the earliest time that the current state is in the reachable set
+    % Binary search
+    upper = length(tau);
+    lower = 1;
+    tEarliest = find_earliest_BRS_ind(CL.g, CL.dataTraj, jointPos, upper, lower);
     
     % Find (CL) value of current position at current time
     traj.value(iter) = ...
-        eval_u(CL.g, CL.dataTraj(CL.clns{:},iter), jointPos);
+        eval_u(CL.g, CL.dataTraj(CL.clns{:},tEarliest), jointPos);
 
     % check if this state is in the BRS/BRT or in an obstacle
     % value = eval_u(g, data, x)
@@ -111,7 +124,7 @@ for iter = 1:length(tau)
     if (iter == length(tau)) || (stopVal < small) || (obsVal < small)
         break
     end
-
+ 
     % find optimal trajectory    
     OL.dynSys.x = attackerPos; %set initial state for OL calc
     CL.dynSys.x = jointPos; % set initial state for CL calc
@@ -119,6 +132,14 @@ for iter = 1:length(tau)
     % If execution horizon has ended, re-compute OL solution
     currentStep = rem(iter-1,horizonSteps) + 1; % current step of the horizon
     if  currentStep == 1 
+        if firstPlan
+            firstPlan = false;
+        else
+            planNum = planNum + 1;
+        end
+        
+        compTime(planNum) = compTime(planNum) - toc;
+        
 %         tauCurrent = tau(iter:(iter+horizonSteps-1));
         tauCurrent = tau(iter:end);
                 
@@ -149,10 +170,18 @@ for iter = 1:length(tau)
         
         % flip data time points so we start from the beginning of time
         dataTrajCurrent = flip(dataCurrent,ndims(dataCurrent));
+        
+        compTime(planNum) = compTime(planNum) + toc;
     end
     
+    % Determine the earliest time that the current state is in the reachable set
+    % Binary search
+    upper = length(tauCurrent);
+    lower = 1;
+    tEarliest = find_earliest_BRS_ind(OL.g, dataTrajCurrent, attackerPos, upper, lower);
+    
     % Store BRS data (forward in time)
-    BRSdata(OL.clns{:},iter) = dataTrajCurrent(OL.clns{:},currentStep);
+    BRSdata(OL.clns{:},iter) = dataTrajCurrent(OL.clns{:},tEarliest);
     
     % Store obstacle data (forward in time)
     obsData(OL.clns{:},iter) = obsTrajCurrent(OL.clns{:},currentStep);
@@ -165,6 +194,8 @@ for iter = 1:length(tau)
   
     % Update defender position
     defenderPos = trajCL_current(3:4,2);    
+    
+    compTime = compTime - toc;
     
     % Update attacker position using OL trajectory
     % [traj, traj_tau] = ...
@@ -180,6 +211,8 @@ for iter = 1:length(tau)
     
     % Store in trajectory
     traj.x(:,iter+1) = jointPos;
+    
+    compTime = compTime + toc;    
 end
 
 % Remove unused positions in trajectory data

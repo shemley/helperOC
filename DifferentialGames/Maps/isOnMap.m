@@ -3,8 +3,8 @@ function onMap = isOnMap(map, x)
 % the map
 
 % check x dims
-if ~all(size(map.min) == size(x))
-    if all(size(map.min) == size(x'))
+if ~all(size(map.grid_min) == size(x))
+    if all(size(map.grid_min) == size(x'))
         x = x';
     else
         error('X dimensions must match map dimensions')
@@ -12,4 +12,4 @@ if ~all(size(map.min) == size(x))
 end
 
 % Check that x falls inside the map min and max in every dimension
-onMap = all(and((x >= map.min), (x <= map.max)));
+onMap = all(and((x >= map.grid_min), (x <= map.grid_max)));

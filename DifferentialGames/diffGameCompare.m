@@ -210,6 +210,9 @@ TrajextraArgsOneStep.trajPoints = 2;
 small = 1e-4;
 
 %% Closed Loop (CL) parameters
+% record CL computation time
+tic
+
 % Colons for taking time slices of data (e.g. data(clns,time))
 clnsCL = repmat({':'}, 1, 4);
 
@@ -298,8 +301,13 @@ if modelError
     schemeDataCLWithError.dynSys = dynSysCLWithError;
 end
 
+% record comp time
+compTimeCL = toc;
 
 %% Open Loop (OL) parameters
+% record OL comp time
+tic
+
 % Colons for taking time slices of data (e.g. data(clns,time))
 clnsOL = repmat({':'}, 1, 2);
 
@@ -325,8 +333,12 @@ schemeDataOL.uMode = uMode;
 % Solver extra parameters
 HJIextraArgsOL.visualize = false; %show plot
 
-%% Compute CL value function
+% Record OL comp time
+compTimeOL = toc;
 
+%% Compute CL value function
+% Record CL comp time
+tic
 if computeCL
     % Print message
     tic
@@ -344,7 +356,7 @@ else
     % Print message
     fprintf('Using pre-computed Closed Loop solution.\n')
 end
-
+compTimeCL = compTimeCL + toc;
 
 % Save CL results and parameters in struct if requested
 if saveCLresult
@@ -369,10 +381,14 @@ if saveCLresult
     % Print message
     fprintf('Closed Loop solution saved.\t%.2f seconds\n',toc)
 end
-  
+
+% record cl comp time
+tic
+
 % For trajectory computation:
 %flip data time points so we start from the beginning of time
 dataTrajCL = flip(dataCL,ndims(dataCL));
+compTimeCL = compTimeCL + toc;
 
 % If modeling error, compute value function with error
 if modelError
@@ -463,6 +479,7 @@ MPC.trajectories = cell([size(AX),length(horizons)]);
 MPC.data = cell([size(AX),length(horizons)]);
 MPC.obstacles = cell([size(AX),length(horizons)]);
 MPC.targetData = targetDataOL;
+MPC.compTime = cell(size(horizons));
 
 %% Loop through Defender positions
 for idx = 1:size(DX,3)
@@ -471,6 +488,9 @@ for idx = 1:size(DX,3)
     defenderPos = [DX(1,1,idx,idy); DY(1,1,idx,idy)]; 
       
     %% Compute OL obstacles
+    % record OL comp time
+    tic
+    
     % Define Obstacles. Use dMaxWithError to consider cases with zero and
     % non-zero error
     obsCenter  = defenderPos;   
@@ -485,7 +505,9 @@ for idx = 1:size(DX,3)
     
     % Set obstacles
     HJIextraArgsOL.obstacles = obstaclesOL;
-
+    compTimeOL = compTimeOL + toc;
+    
+    
     %% Compute OL value function
     % Print message
     tic
@@ -503,6 +525,9 @@ for idx = 1:size(DX,3)
     % For trajectory computation:
     %flip data time points so we start from the beginning of time
     dataTrajOL = flip(dataOL,ndims(dataOL));
+    
+    % record ol comp time
+    compTimeOL = compTimeOL + toc;
 
     %% Loop through attacker positions
     for iax = 1:size(AX,1)
@@ -533,18 +558,30 @@ for idx = 1:size(DX,3)
             [trajOL, traj_tauOL] = ...
               computeOptTraj(gOL, dataTrajOL, tauOL, dynSysOL, TrajextraArgs);
 
+            % Record comp time
+            compTimeOL = compTimeOL + toc;
+          
             % Set up trajectory output
             traj.x = nan(4,length(traj_tauOL));
             traj.value = nan(size(traj_tauOL));
             traj.tau = traj_tauOL;
+            tEarliest = 1;
 
             % Calculate OL defender and value trajectories
             newDefenderPos = defenderPos;
             for iter = 1:length(traj_tauOL)
                 dynSysCL.x = [trajOL(:,iter); newDefenderPos]; %set initial state
+                
+                % Determine the earliest time that the current state is in the reachable set
+                % Binary search
+                upper = length(tau);
+                lower = 1;
+  
+                tEarliest = find_earliest_BRS_ind(gCL, dataTrajCL, dynSysCL.x, upper, lower);
+                
                 traj.x(:,iter) = dynSysCL.x; % store joint state in trajectory
                 traj.value(iter) =... % calculate value
-                   eval_u(gCL,dataTrajCL(clnsCL{:},iter),dynSysCL.x);
+                   eval_u(gCL,dataTrajCL(clnsCL{:},tEarliest),dynSysCL.x);
                 stopVal = eval_u(gCL, dataCL(clnsCL{:},1), dynSysCL.x); % calc target val
                 obsVal  = eval_u(gCL, obstaclesCL, dynSysCL.x); % calc obstacle value
 
@@ -598,9 +635,18 @@ for idx = 1:size(DX,3)
               
                 % Calculate CL values
                 for iter = 1:length(traj_tauCL)
+                    % Determine the earliest time that the current state is in the reachable set
+                    % Binary search
+                    upper = length(tau);
+                    lower = 1;
+  
+                    tEarliest = find_earliest_BRS_ind(gCL, dataTrajCL, trajCL(:,iter), upper, lower);
+                    
                     traj.value(iter) =... % calculate value
-                        eval_u(gCL,dataTrajCL(clnsCL{:},iter),trajCL(:,iter)); 
-                end              
+                        eval_u(gCL,dataTrajCL(clnsCL{:},tEarliest),trajCL(:,iter)); 
+                end
+                
+                compTimeCL = compTimeCL + toc;
             else                
                 traj.x = nan(length(initPos),length(tau));
                 traj.value = nan(size(tau));
@@ -609,10 +655,17 @@ for idx = 1:size(DX,3)
                 jointPos = initPos;
                 traj.x(:,1) = initPos;
                 
-                for iter = 1:length(tau)    
+                for iter = 1:length(tau)   
+                    % Determine the earliest time that the current state is in the reachable set
+                    % Binary search
+                    upper = length(tau);
+                    lower = 1;
+  
+                    tEarliest = find_earliest_BRS_ind(gCL, dataTrajCL, jointPos, upper, lower);
+                    
                     % Find (CL) value of current position at current time
                     traj.value(iter) = ...
-                        eval_u(gCL, dataTrajCL(clnsCL{:},iter), jointPos);
+                        eval_u(gCL, dataTrajCL(clnsCL{:},tEarliest), jointPos);
 
                     % check if this state is in the BRS/BRT or in an obstacle
                     % value = eval_u(g, data, x)
@@ -672,7 +725,7 @@ for idx = 1:size(DX,3)
           tic
           fprintf('Computing MPC trajectory for horizon of %.2f...\n',horizons(ihz))          
           
-          [trajMPC, dataMPC, obsMPC] = ...
+          [trajMPC, dataMPC, obsMPC, compTimeMPC] = ...
             diffGameSolveMPC(agentInfoMPC,numHorizonSteps(ihz),tau,CLin,OLin,map);
         
           % Store MPC data in output struct
@@ -680,6 +733,7 @@ for idx = 1:size(DX,3)
           MPC.trajectories{iax,iay,idx,idy,ihz} = trajMPC;
           MPC.data{iax,iay,idx,idy,ihz} = dataMPC;
           MPC.obstacles{iax,iay,idx,idy,ihz} = obsMPC;
+          MPC.compTime{ihz} = compTimeMPC;
           
           % Print message
           fprintf(['MPC trajectory computed for horizon of ',...
@@ -690,6 +744,10 @@ for idx = 1:size(DX,3)
   end
 end
         
+CL.compTime = compTimeCL;
+OL.compTime = compTimeOL;
+
+
 %% Visualize
 % if visualize
 %     figure;
