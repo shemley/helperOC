@@ -43,12 +43,19 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
 % state space dimensions
 
+map = getMap('one_rectangle');
+if isfield(map,'obstacles')
+    staticObstacles = true;
+else
+    staticObstacles = false;
+end
+
 %% target set
 R = 1;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
-targetCenter = [0; 0];
-data0 = shapeSphere(g, targetCenter, R); % target set for attacker is a circle
-% also try shapeRectangleByCorners, shapeSphere, etc.
+targetCenter = map.target.center;
+% target set for attacker is a circle (given in map)
+targetData = map.target.data; %shapeSphere(gOL, targetCenter, map.target.radius); 
 
 %% time vector
 t0 = 0;
@@ -95,12 +102,19 @@ schemeData.uMode = uMode;
 
 %% If you have obstacles, compute them here
 % avoid set
-captureRadius = 1;
-dMax = 1; % defender max speed
+captureRadius = 0.5;
+dMax = 2; % defender max speed
 
-advInitPos = [-2; 3]; % adversary initial position
+advInitPos = [-2; 2]; % adversary initial position
 obsCenter  = advInitPos;   
-obstacles = getOpenLoopAvoidSet(g,obsCenter,captureRadius,dMax,tau,'SOS');
+obstacles = getOpenLoopAvoidSet(g,obsCenter,captureRadius,dMax,tau);
+
+if staticObstacles
+    for iObs = 1:length(tau)
+        obstacles(:,:,iObs) = ...
+            min(obstacles(:,:,iObs), map.obstacles);
+    end
+end
 
 % Set obstacles
 HJIextraArgs.obstacles = obstacles;
@@ -114,14 +128,14 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 %[data, tau, extraOuts] = ...
 % HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
 [data, tau2, ~] = ...
-  HJIPDE_solve(data0, tau, schemeData, minWith, HJIextraArgs);
+  HJIPDE_solve(targetData, tau, schemeData, minWith, HJIextraArgs);
 
 %% Compute optimal trajectory from some initial state
 if compTraj
   pause
   
   %set the initial state
-  xinit = [-2, 1.7];
+  xinit = [1, -1];
     
   %check if this initial state is in the BRS/BRT
   %value = eval_u(g, data, x)
@@ -141,7 +155,7 @@ if compTraj
     TrajextraArgs.projDim = agentDim;
     
     % Show target set
-    TrajextraArgs.targetData = data0;  
+    TrajextraArgs.targetData = targetData;  
     TrajextraArgs.targetCenter = targetCenter;   
     
     % Show obstacle set. Flip time point to start at the beginning of time
