@@ -1,8 +1,16 @@
-function action = getRLAction(x, w, dt, dynSys, mode)
+function action = getRLAction(x, w, dt, dynSys, mode, options)
 % function to get action based on RL value. Uses a 1 level depth limited
 % search with eval function. 
 % Mode determines whose turn it is first. 'min' means attacker first, 'max'
 % means defender first
+
+nnet = false;
+
+if nargin > 5
+    if isfield(options,'nnet')
+        nnet = options.nnet;
+    end
+end
 
 if strcmp(mode,'min')
     attacker = true;
@@ -53,7 +61,12 @@ for i = 1:size(firstActions,2)
         secondAct = secondActions(:,j);
         secondX = secondUpdate(firstX,secondAct);
         
-        newValue = getRLValue(secondX, w);
+        if nnet           
+            newValue = w.calculateValue(getRLFeatures(secondX,options));
+        else
+            newValue = getRLValue(secondX, w, options);
+        end
+        
         
         if attacker
             if newValue > upper
